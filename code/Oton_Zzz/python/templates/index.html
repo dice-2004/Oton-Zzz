@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oton-Zzz Dashboard | Deep Space</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Orbitron & Exo 2 -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600&family=Orbitron:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --space-bg: #0b0d17;
+            --card-bg: rgba(20, 25, 40, 0.7);
+            --border-color: rgba(100, 200, 255, 0.2);
+            --text-main: #e0e6ed;
+            --accent-cyan: #00f0ff;
+            --accent-purple: #bc13fe;
+            --accent-pink: #ff2a6d;
+        }
+
+        body {
+            background-color: var(--space-bg);
+            color: var(--text-main);
+            font-family: 'Exo 2', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Starfield Background */
+        .stars,
+        .stars2,
+        .stars3 {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: transparent;
+        }
+
+        /* Generating stars using box-shadow (CSS trick) */
+        .stars {
+            width: 1px;
+            height: 1px;
+            background: transparent;
+            box-shadow: 10vw 10vh #fff, 20vw 20vh #fff, 30vw 5vh #fff, 40vw 40vh #fff, 50vw 90vh #fff, 60vw 30vh #fff, 70vw 70vh #fff, 80vw 10vh #fff, 90vw 50vh #fff;
+            animation: animStar 50s linear infinite;
+        }
+
+        .stars::after {
+            content: " ";
+            position: absolute;
+            top: 100vh;
+            width: 1px;
+            height: 1px;
+            background: transparent;
+            box-shadow: 10vw 10vh #fff, 20vw 20vh #fff, 30vw 5vh #fff, 40vw 40vh #fff, 50vw 90vh #fff, 60vw 30vh #fff, 70vw 70vh #fff, 80vw 10vh #fff, 90vw 50vh #fff;
+        }
+
+        .stars2 {
+            width: 2px;
+            height: 2px;
+            background: transparent;
+            box-shadow: 15vw 15vh #88ccff, 25vw 25vh #88ccff, 35vw 55vh #88ccff, 45vw 85vh #88ccff, 85vw 15vh #88ccff;
+            animation: animStar 100s linear infinite;
+        }
+
+        .stars2::after {
+            content: " ";
+            position: absolute;
+            top: 100vh;
+            width: 2px;
+            height: 2px;
+            background: transparent;
+            box-shadow: 15vw 15vh #88ccff, 25vw 25vh #88ccff, 35vw 55vh #88ccff, 45vw 85vh #88ccff, 85vw 15vh #88ccff;
+        }
+
+        @keyframes animStar {
+            from {
+                transform: translateY(0px);
+            }
+
+            to {
+                transform: translateY(-100vh);
+            }
+        }
+
+        /* Nebula Glow */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 80vw;
+            height: 80vw;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(188, 19, 254, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        /* Space Card */
+        .space-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .space-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(188, 19, 254, 0.2);
+            border-color: rgba(188, 19, 254, 0.5);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .header-title {
+            font-size: 3.5rem;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        /* Stats */
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 10px 0;
+            color: #fff;
+            text-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        .stat-label {
+            color: #88ccff;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Table */
+        .table {
+            --bs-table-bg: transparent;
+            color: var(--text-main);
+        }
+
+        .table thead th {
+            font-family: 'Orbitron', sans-serif;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--accent-cyan);
+            font-size: 0.8rem;
+            padding-bottom: 15px;
+        }
+
+        .table td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px 0;
+            vertical-align: middle;
+        }
+
+        /* Badges */
+        .badge-space {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            border: 1px solid transparent;
+        }
+
+        .badge-sleep {
+            background: rgba(255, 42, 109, 0.1);
+            color: var(--accent-pink);
+            border-color: var(--accent-pink);
+            box-shadow: 0 0 10px rgba(255, 42, 109, 0.2);
+        }
+
+        .badge-tv-on {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        }
+
+        .badge-tv-off {
+            background: rgba(255, 255, 255, 0.1);
+            color: #aaa;
+        }
+
+        /* Chart */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Planet Decoration */
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        .planet-1 {
+            width: 100px;
+            height: 100px;
+            top: 10%;
+            right: 5%;
+            background: linear-gradient(135deg, #ff2a6d, #5c0029);
+            box-shadow: inset -10px -10px 20px rgba(0, 0, 0, 0.5);
+            opacity: 0.8;
+        }
+
+        .planet-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(70deg);
+            width: 160px;
+            height: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="stars"></div>
+    <div class="stars2"></div>
+    <div class="planet planet-1">
+        <div class="planet-ring"></div>
+    </div>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="header-title">OTON-ZZZ</h1>
+            <p style="color: #88ccff; letter-spacing: 4px; text-transform: uppercase; font-size: 0.9rem;">
+                Orbital Sleep Monitoring System
+            </p>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-5">
+            <!-- Sleep Count -->
+            <div class="col-md-3">
+                <div class="space-card text-center h-100">
+                    <div class="stat-icon mx-auto">
+                        <i class="bi bi-moon-stars-fill" style="color: var(--accent-purple);"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.sleep_count }}</div>
+                    <div class="stat-label">Sleep Detected</div>
+                </div>
+            </div>
+
+            <!-- Wasted Time -->
+            <div class="col-md-3">
+                <div class="space-card text-center h-100">
+                    <div class="stat-icon mx-auto">
+                        <i class="bi bi-hourglass-split" style="color: var(--accent-cyan);"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.wasted_seconds }}</div>
+                    <div class="stat-label">Idle Seconds</div>
+                </div>
+            </div>
+
+            <!-- Saved Money -->
+            <div class="col-md-3">
+                <div class="space-card text-center h-100">
+                    <div class="stat-icon mx-auto">
+                        <i class="bi bi-piggy-bank-fill" style="color: #00ff88;"></i>
+                    </div>
+                    <div class="stat-value">¥{{ stats.estimated_saved_money }}</div>
+                    <div class="stat-label">Est. Savings</div>
+                </div>
+            </div>
+
+            <!-- Wasted Money -->
+            <div class="col-md-3">
+                <div class="space-card text-center h-100">
+                    <div class="stat-icon mx-auto">
+                        <i class="bi bi-lightning-charge-fill" style="color: var(--accent-pink);"></i>
+                    </div>
+                    <div class="stat-value">¥{{ stats.wasted_money }}</div>
+                    <div class="stat-label">Actual Cost</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Recent Logs -->
+            <div class="col-lg-8">
+                <div class="space-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="m-0">Mission Log</h4>
+                        <span class="badge rounded-pill border border-secondary text-secondary">RECENT 20</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>T-Minus</th>
+                                    <th>Event</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td style="font-family: 'Orbitron', monospace; color: #88ccff;">
+                                        {{ log.timestamp.split('.')[0].replace('T', ' ') }}
+                                    </td>
+                                    <td>
+                                        {% if log.event_type == 'SLEEP_DETECTED' %}
+                                        <span class="badge-space badge-sleep">SLEEP</span>
+                                        {% elif log.event_type == 'TV_ON' %}
+                                        <span class="badge-space badge-tv-on">TV ON</span>
+                                        {% elif log.event_type == 'TV_OFF' %}
+                                        <span class="badge-space badge-tv-off">TV OFF</span>
+                                        {% else %}
+                                        <span class="badge-space text-light border-light">{{ log.event_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.note }}
+                                        {% if log.duration > 0 %}
+                                        <span class="ms-2" style="color: var(--accent-cyan);">[{{ log.duration
+                                            }}s]</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="col-lg-4">
+                <div class="space-card h-100">
+                    <h4 class="mb-4 text-center">Efficiency</h4>
+                    <div class="chart-container">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small" style="color: #88ccff;">
+                        <i class="bi bi-globe me-1"></i>
+                        Global Impact Analysis
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js Configuration
+        Chart.defaults.font.family = "'Exo 2', sans-serif";
+        Chart.defaults.color = '#e0e6ed';
+        Chart.defaults.borderColor = 'rgba(100, 200, 255, 0.1)';
+
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['SAVED', 'WASTED'],
+                datasets: [{
+                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
+            backgroundColor: [
+                'rgba(0, 240, 255, 0.6)',  // Cyan
+                'rgba(255, 42, 109, 0.6)'   // Pink
+            ],
+            borderColor: '#0b0d17',
+            borderWidth: 2,
+            hoverOffset: 10
+        }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'star',
+                        font: {
+                            family: "'Orbitron', sans-serif"
+                        }
+                    }
+                }
+            }
+        }
+    });
+    </script>
+
+</body>
+
+</html>
