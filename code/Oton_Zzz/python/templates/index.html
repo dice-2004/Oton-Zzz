@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oton-Zzz Dashboard | Clean</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --accent-color: #3b82f6;
+            /* Blue 500 */
+            --success-color: #10b981;
+            /* Emerald 500 */
+            --warning-color: #f59e0b;
+            /* Amber 500 */
+            --danger-color: #ef4444;
+            /* Red 500 */
+            --card-radius: 24px;
+            --card-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Clean Card */
+        .clean-card {
+            background: var(--card-bg);
+            border: none;
+            border-radius: var(--card-radius);
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+
+        .clean-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--text-primary);
+        }
+
+        .header-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* Stats */
+        .stat-card-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: space-between;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+            letter-spacing: -0.03em;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+
+        .icon-blue {
+            background-color: #eff6ff;
+            color: var(--accent-color);
+        }
+
+        .icon-green {
+            background-color: #ecfdf5;
+            color: var(--success-color);
+        }
+
+        .icon-yellow {
+            background-color: #fffbeb;
+            color: var(--warning-color);
+        }
+
+        .icon-red {
+            background-color: #fef2f2;
+            color: var(--danger-color);
+        }
+
+        /* Table */
+        .table {
+            margin-top: 10px;
+        }
+
+        .table thead th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 16px;
+        }
+
+        .table td {
+            padding: 16px 0;
+            vertical-align: middle;
+            border-bottom: 1px solid #f3f4f6;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .table-hover tbody tr:hover td {
+            background-color: transparent;
+            /* No hover bg for cleaner look */
+            color: var(--accent-color);
+        }
+
+        /* Badges */
+        .badge-clean {
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            letter-spacing: 0.025em;
+        }
+
+        .badge-sleep {
+            background-color: #eff6ff;
+            color: var(--accent-color);
+        }
+
+        .badge-tv-on {
+            background-color: #ecfdf5;
+            color: var(--success-color);
+        }
+
+        .badge-tv-off {
+            background-color: #f3f4f6;
+            color: var(--text-secondary);
+        }
+
+        /* Chart */
+        .chart-container {
+            position: relative;
+            height: 280px;
+        }
+
+        .chart-center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-end mb-5">
+            <div>
+                <h1 class="header-title">Dashboard</h1>
+                <p class="header-subtitle m-0">Oton-Zzz Sleep Detection System</p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-white text-dark shadow-sm px-3 py-2 rounded-pill fw-normal">
+                    <i class="bi bi-circle-fill text-success me-2" style="font-size: 0.5rem;"></i>System Active
+                </span>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-4">
+            <!-- Sleep Count -->
+            <div class="col-md-3">
+                <div class="clean-card h-100">
+                    <div class="stat-card-inner">
+                        <div>
+                            <div class="stat-icon icon-blue"><i class="bi bi-moon-stars"></i></div>
+                            <div class="stat-label">Sleep Detected</div>
+                            <div class="stat-value">{{ stats.sleep_count }}</div>
+                        </div>
+                        <div class="text-secondary small">Times this week</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wasted Time -->
+            <div class="col-md-3">
+                <div class="clean-card h-100">
+                    <div class="stat-card-inner">
+                        <div>
+                            <div class="stat-icon icon-yellow"><i class="bi bi-hourglass"></i></div>
+                            <div class="stat-label">Idle Duration</div>
+                            <div class="stat-value">{{ stats.wasted_seconds }}</div>
+                        </div>
+                        <div class="text-secondary small">Seconds wasted</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Money -->
+            <div class="col-md-3">
+                <div class="clean-card h-100">
+                    <div class="stat-card-inner">
+                        <div>
+                            <div class="stat-icon icon-green"><i class="bi bi-wallet2"></i></div>
+                            <div class="stat-label">Est. Savings</div>
+                            <div class="stat-value text-success">¥{{ stats.estimated_saved_money }}</div>
+                        </div>
+                        <div class="text-secondary small">Based on 4h avg</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wasted Money -->
+            <div class="col-md-3">
+                <div class="clean-card h-100">
+                    <div class="stat-card-inner">
+                        <div>
+                            <div class="stat-icon icon-red"><i class="bi bi-lightning-charge"></i></div>
+                            <div class="stat-label">Actual Cost</div>
+                            <div class="stat-value">¥{{ stats.wasted_money }}</div>
+                        </div>
+                        <div class="text-secondary small">Before shutdown</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Recent Logs -->
+            <div class="col-lg-8">
+                <div class="clean-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="m-0">Recent Activity</h4>
+                        <button class="btn btn-light btn-sm rounded-pill px-3">View All</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Event</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td class="text-secondary">{{ log.timestamp.split('.')[0].replace('T', ' ') }}</td>
+                                    <td>
+                                        {% if log.event_type == 'SLEEP_DETECTED' %}
+                                        <span class="badge-clean badge-sleep">Sleep Detected</span>
+                                        {% elif log.event_type == 'TV_ON' %}
+                                        <span class="badge-clean badge-tv-on">TV ON</span>
+                                        {% elif log.event_type == 'TV_OFF' %}
+                                        <span class="badge-clean badge-tv-off">TV OFF</span>
+                                        {% else %}
+                                        <span class="badge-clean bg-light text-dark">{{ log.event_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.note }}
+                                        {% if log.duration > 0 %}
+                                        <span class="ms-2 text-warning fw-bold">{{ log.duration }}s</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="col-lg-4">
+                <div class="clean-card h-100">
+                    <h4 class="mb-4">Impact Analysis</h4>
+                    <div class="chart-container">
+                        <canvas id="savingsChart"></canvas>
+                        <div class="chart-center-text">
+                            <div class="text-secondary small text-uppercase fw-bold">Total</div>
+                            <div class="fs-3 fw-bold">Impact</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-light rounded-4 text-center text-secondary small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Calculation assumes 4 hours of idle time prevented per detection.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js Configuration
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#6b7280';
+
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Saved', 'Wasted'],
+                datasets: [{
+                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
+            backgroundColor: [
+                '#10b981',  // Emerald
+                '#ef4444'   // Red
+            ],
+            borderWidth: 0,
+            hoverOffset: 4
+        }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '80%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            size: 12,
+                            weight: 500
+                        }
+                    }
+                }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        }
+    });
+    </script>
+
+</body>
+
+</html>
