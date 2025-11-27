@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oton-Zzz Dashboard</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-color: #00d2ff;
+            --accent-gradient: linear-gradient(90deg, #00d2ff, #3a7bd5);
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: var(--glass-shadow);
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            background-clip: text;
+        }
+
+        /* Stats */
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin: 10px 0;
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        /* Table */
+        .table {
+            color: var(--text-primary);
+            margin-top: 10px;
+        }
+
+        .table thead th {
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            font-weight: 600;
+            background: transparent;
+        }
+
+        .table td {
+            border-bottom: 1px solid var(--glass-border);
+            vertical-align: middle;
+            background: transparent;
+            color: var(--text-primary);
+        }
+
+        .table-hover tbody tr:hover td {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        /* Badges */
+        .badge-custom {
+            padding: 8px 12px;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .bg-sleep {
+            background: rgba(255, 99, 132, 0.2);
+            color: #ff6384;
+            border: 1px solid rgba(255, 99, 132, 0.3);
+        }
+
+        .bg-tv-on {
+            background: rgba(75, 192, 192, 0.2);
+            color: #4bc0c0;
+            border: 1px solid rgba(75, 192, 192, 0.3);
+        }
+
+        .bg-tv-off {
+            background: rgba(153, 102, 255, 0.2);
+            color: #9966ff;
+            border: 1px solid rgba(153, 102, 255, 0.3);
+        }
+
+        /* Animations */
+        .fade-in-up {
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+
+        .delay-4 {
+            animation-delay: 0.4s;
+        }
+
+        /* Utility */
+        .text-accent {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5 fade-in-up">
+            <h1 class="header-title"><i class="bi bi-moon-stars-fill me-2"></i>Oton-Zzz</h1>
+            <p class="text-secondary">Smart Sleep Detection System</p>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-5">
+            <!-- Sleep Count -->
+            <div class="col-md-3 fade-in-up delay-1">
+                <div class="glass-card text-center h-100">
+                    <div class="stat-icon text-primary"><i class="bi bi-eye-slash-fill"></i></div>
+                    <div class="stat-label">今週の寝落ち</div>
+                    <div class="stat-value">{{ stats.sleep_count }}<span class="fs-4 ms-1">回</span></div>
+                </div>
+            </div>
+
+            <!-- Wasted Time -->
+            <div class="col-md-3 fade-in-up delay-2">
+                <div class="glass-card text-center h-100">
+                    <div class="stat-icon text-warning"><i class="bi bi-hourglass-split"></i></div>
+                    <div class="stat-label">無駄になった時間</div>
+                    <div class="stat-value">{{ stats.wasted_seconds }}<span class="fs-4 ms-1">秒</span></div>
+                </div>
+            </div>
+
+            <!-- Saved Money -->
+            <div class="col-md-3 fade-in-up delay-3">
+                <div class="glass-card text-center h-100">
+                    <div class="stat-icon text-success"><i class="bi bi-piggy-bank-fill"></i></div>
+                    <div class="stat-label">推定節約額</div>
+                    <div class="stat-value text-success">¥{{ stats.estimated_saved_money }}</div>
+                </div>
+            </div>
+
+            <!-- Wasted Money -->
+            <div class="col-md-3 fade-in-up delay-4">
+                <div class="glass-card text-center h-100">
+                    <div class="stat-icon text-danger"><i class="bi bi-lightning-charge-fill"></i></div>
+                    <div class="stat-label">無駄になった電気代</div>
+                    <div class="stat-value">¥{{ stats.wasted_money }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Recent Logs -->
+            <div class="col-lg-8 fade-in-up delay-3">
+                <div class="glass-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="m-0"><i class="bi bi-list-ul me-2"></i>Activity Log</h4>
+                        <span class="badge bg-secondary bg-opacity-25">Recent 20</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>TIME</th>
+                                    <th>EVENT</th>
+                                    <th>NOTE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td class="text-secondary font-monospace">{{
+                                        log.timestamp.split('.')[0].replace('T', ' ') }}</td>
+                                    <td>
+                                        {% if log.event_type == 'SLEEP_DETECTED' %}
+                                        <span class="badge-custom bg-sleep"><i class="bi bi-moon-fill me-1"></i>Sleep
+                                            Detected</span>
+                                        {% elif log.event_type == 'TV_ON' %}
+                                        <span class="badge-custom bg-tv-on"><i class="bi bi-tv me-1"></i>TV ON</span>
+                                        {% elif log.event_type == 'TV_OFF' %}
+                                        <span class="badge-custom bg-tv-off"><i class="bi bi-power me-1"></i>TV
+                                            OFF</span>
+                                        {% else %}
+                                        <span class="badge-custom bg-secondary">{{ log.event_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.note }}
+                                        {% if log.duration > 0 %}
+                                        <span class="ms-2 text-warning"><i class="bi bi-stopwatch me-1"></i>{{
+                                            log.duration }}s</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="col-lg-4 fade-in-up delay-4">
+                <div class="glass-card h-100">
+                    <h4 class="mb-4"><i class="bi bi-pie-chart-fill me-2"></i>Impact</h4>
+                    <div class="position-relative" style="height: 300px;">
+                        <canvas id="savingsChart"></canvas>
+                        <!-- Center Text -->
+                        <div class="position-absolute top-50 start-50 translate-middle text-center">
+                            <div class="text-secondary small">TOTAL</div>
+                            <div class="fs-4 fw-bold">SAVINGS</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center text-secondary small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Based on estimated 4h idle time per sleep detection.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js Configuration
+        Chart.defaults.color = '#a0a0a0';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Saved', 'Wasted'],
+                datasets: [{
+                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
+            backgroundColor: [
+                'rgba(75, 192, 192, 0.8)',  // Green/Teal
+                'rgba(255, 99, 132, 0.8)'   // Red/Pink
+            ],
+            borderColor: [
+                'rgba(75, 192, 192, 1)',
+                'rgba(255, 99, 132, 1)'
+            ],
+            borderWidth: 1,
+            hoverOffset: 10
+        }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        }
+    });
+    </script>
+
+</body>
+
+</html>
