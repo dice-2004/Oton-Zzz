@@ -110,7 +110,8 @@ class VoiceController:
                 pass
 
             # aplayで再生
-            subprocess.run(['aplay', '-q', wav_path], check=True)
+            # HDMI0に出力 (plughw:0,0)
+            subprocess.run(['aplay', '-D', 'plughw:0,0', '-q', wav_path], check=True)
 
         except subprocess.CalledProcessError:
             print("✗ オーディオ再生に失敗しました")
