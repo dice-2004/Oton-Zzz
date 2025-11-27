@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oton-Zzz Dashboard | Cyberpunk</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Share Tech Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --bg-color: #050510;
+            --card-bg: rgba(10, 10, 20, 0.8);
+            --text-main: #00f3ff;
+            /* Cyan */
+            --text-dim: #005f6b;
+            --accent-pink: #ff00ff;
+            --accent-green: #00ff41;
+            --accent-yellow: #fcee0a;
+            --border-glow: 0 0 10px rgba(0, 243, 255, 0.5);
+            --text-glow: 0 0 5px rgba(0, 243, 255, 0.7);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Share Tech Mono', monospace;
+            min-height: 100vh;
+            background-image:
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Scanline Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0),
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(0, 0, 0, 0.1) 50%,
+                    rgba(0, 0, 0, 0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Cyber Card */
+        .cyber-card {
+            background: var(--card-bg);
+            border: 1px solid var(--text-main);
+            box-shadow: var(--border-glow);
+            padding: 20px;
+            margin-bottom: 25px;
+            position: relative;
+            clip-path: polygon(0 0,
+                    100% 0,
+                    100% calc(100% - 20px),
+                    calc(100% - 20px) 100%,
+                    0 100%);
+        }
+
+        .cyber-card::after {
+            content: "";
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 10px;
+            height: 10px;
+            background-color: var(--text-main);
+            box-shadow: var(--border-glow);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: var(--text-glow);
+        }
+
+        .header-title {
+            font-size: 3.5rem;
+            color: var(--accent-pink);
+            text-shadow: 0 0 10px var(--accent-pink);
+            border-bottom: 2px solid var(--accent-pink);
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+
+        .system-status {
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            padding: 5px 15px;
+            display: inline-block;
+            margin-top: 10px;
+            box-shadow: 0 0 5px var(--accent-green);
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Stats */
+        .stat-value {
+            font-size: 3rem;
+            margin: 10px 0;
+            text-shadow: var(--text-glow);
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .text-pink {
+            color: var(--accent-pink);
+            text-shadow: 0 0 5px var(--accent-pink);
+        }
+
+        .text-green {
+            color: var(--accent-green);
+            text-shadow: 0 0 5px var(--accent-green);
+        }
+
+        .text-yellow {
+            color: var(--accent-yellow);
+            text-shadow: 0 0 5px var(--accent-yellow);
+        }
+
+        /* Table */
+        .table {
+            color: var(--text-main);
+            margin-top: 10px;
+            border-color: var(--text-dim);
+        }
+
+        .table thead th {
+            color: var(--accent-yellow);
+            border-bottom: 1px solid var(--text-main);
+            background: transparent;
+        }
+
+        .table td {
+            background: transparent;
+            color: var(--text-main);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        .table-hover tbody tr:hover td {
+            background-color: rgba(0, 243, 255, 0.1);
+            color: #fff;
+        }
+
+        /* Badges */
+        .badge-cyber {
+            border: 1px solid currentColor;
+            background: transparent;
+            border-radius: 0;
+            padding: 5px 10px;
+            font-weight: normal;
+            letter-spacing: 1px;
+        }
+
+        .badge-sleep {
+            color: var(--accent-pink);
+            box-shadow: 0 0 5px var(--accent-pink);
+        }
+
+        .badge-tv-on {
+            color: var(--accent-green);
+            box-shadow: 0 0 5px var(--accent-green);
+        }
+
+        .badge-tv-off {
+            color: var(--text-main);
+            box-shadow: 0 0 5px var(--text-main);
+        }
+
+        /* Glitch Effect on Hover */
+        .cyber-card:hover h4 {
+            animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+        }
+
+        @keyframes glitch {
+            0% {
+                transform: translate(0)
+            }
+
+            20% {
+                transform: translate(-2px, 2px)
+            }
+
+            40% {
+                transform: translate(-2px, -2px)
+            }
+
+            60% {
+                transform: translate(2px, 2px)
+            }
+
+            80% {
+                transform: translate(2px, -2px)
+            }
+
+            100% {
+                transform: translate(0)
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="header-title">OTON-ZZZ</h1>
+            <br>
+            <div class="system-status">
+                <i class="bi bi-cpu-fill me-2"></i>SYSTEM ONLINE
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-5">
+            <!-- Sleep Count -->
+            <div class="col-md-3">
+                <div class="cyber-card text-center h-100">
+                    <div class="stat-label">DETECTED_SLEEP</div>
+                    <div class="stat-value text-pink">{{ stats.sleep_count }}</div>
+                    <div class="small text-dim">CYCLES</div>
+                </div>
+            </div>
+
+            <!-- Wasted Time -->
+            <div class="col-md-3">
+                <div class="cyber-card text-center h-100">
+                    <div class="stat-label">IDLE_TIME</div>
+                    <div class="stat-value text-yellow">{{ stats.wasted_seconds }}</div>
+                    <div class="small text-dim">SECONDS</div>
+                </div>
+            </div>
+
+            <!-- Saved Money -->
+            <div class="col-md-3">
+                <div class="cyber-card text-center h-100">
+                    <div class="stat-label">EST_SAVINGS</div>
+                    <div class="stat-value text-green">¥{{ stats.estimated_saved_money }}</div>
+                    <div class="small text-dim">CREDITS</div>
+                </div>
+            </div>
+
+            <!-- Wasted Money -->
+            <div class="col-md-3">
+                <div class="cyber-card text-center h-100">
+                    <div class="stat-label">LOSS</div>
+                    <div class="stat-value">¥{{ stats.wasted_money }}</div>
+                    <div class="small text-dim">CREDITS</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Recent Logs -->
+            <div class="col-lg-8">
+                <div class="cyber-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="m-0">>> SYSTEM_LOGS</h4>
+                        <span class="text-dim">/var/log/oton-zzz</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>TIMESTAMP</th>
+                                    <th>EVENT_ID</th>
+                                    <th>DATA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td>{{ log.timestamp.split('.')[0].replace('T', ' ') }}</td>
+                                    <td>
+                                        {% if log.event_type == 'SLEEP_DETECTED' %}
+                                        <span class="badge-cyber badge-sleep">SLEEP_DETECT</span>
+                                        {% elif log.event_type == 'TV_ON' %}
+                                        <span class="badge-cyber badge-tv-on">TV_POWER_ON</span>
+                                        {% elif log.event_type == 'TV_OFF' %}
+                                        <span class="badge-cyber badge-tv-off">TV_POWER_OFF</span>
+                                        {% else %}
+                                        <span class="badge-cyber">{{ log.event_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.note }}
+                                        {% if log.duration > 0 %}
+                                        <span class="ms-2 text-yellow">[{{ log.duration }}s]</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="col-lg-4">
+                <div class="cyber-card h-100">
+                    <h4 class="mb-4 text-center">>> EFFICIENCY_ANALYSIS</h4>
+                    <div style="height: 300px;">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                    <div class="mt-3 text-center text-dim small border-top border-secondary pt-2">
+                        <i class="bi bi-terminal me-1"></i>
+                        CALCULATION_MODEL: v1.0
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js Configuration
+        Chart.defaults.color = '#00f3ff';
+        Chart.defaults.borderColor = 'rgba(0, 243, 255, 0.2)';
+        Chart.defaults.font.family = "'Share Tech Mono', monospace";
+
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['SAVED', 'WASTED'],
+                datasets: [{
+                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
+            backgroundColor: [
+                'rgba(0, 255, 65, 0.2)',  // Green
+                'rgba(255, 0, 255, 0.2)'   // Pink
+            ],
+            borderColor: [
+                '#00ff41',
+                '#ff00ff'
+            ],
+            borderWidth: 2,
+            hoverOffset: 15
+        }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'crossRot'
+                    }
+                }
+            }
+        }
+    });
+    </script>
+
+</body>
+
+</html>
