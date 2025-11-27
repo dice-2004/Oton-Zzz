@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oton-Zzz Dashboard | Neo</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Space Grotesk -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --bg-color: #f0f0f0;
+            --card-bg: #ffffff;
+            --text-color: #000000;
+            --border-color: #000000;
+            --shadow-color: #000000;
+
+            --accent-1: #ff6b6b;
+            /* Red */
+            --accent-2: #4ecdc4;
+            /* Teal */
+            --accent-3: #ffe66d;
+            /* Yellow */
+            --accent-4: #1a535c;
+            /* Dark Blue */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+            background-image: radial-gradient(#000 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Neo-Brutalism Card */
+        .neo-card {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            border-radius: 0;
+            box-shadow: 5px 5px 0px var(--shadow-color);
+            padding: 20px;
+            margin-bottom: 25px;
+            transition: all 0.2s ease;
+        }
+
+        .neo-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 7px 7px 0px var(--shadow-color);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .header-title {
+            font-size: 3rem;
+            background: var(--text-color);
+            color: #fff;
+            display: inline-block;
+            padding: 10px 20px;
+            transform: rotate(-2deg);
+            border: 3px solid var(--border-color);
+            box-shadow: 5px 5px 0px var(--accent-3);
+        }
+
+        /* Stats */
+        .stat-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin: 15px 0;
+        }
+
+        .stat-label {
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--border-color);
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        /* Colors for cards */
+        .card-1 {
+            background-color: #fff;
+        }
+
+        .card-2 {
+            background-color: #fff;
+        }
+
+        .card-3 {
+            background-color: #fff;
+        }
+
+        .card-4 {
+            background-color: #fff;
+        }
+
+        .icon-box {
+            font-size: 2rem;
+            border: 3px solid var(--border-color);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            background: #fff;
+            box-shadow: 3px 3px 0px var(--shadow-color);
+        }
+
+        .bg-1 {
+            background-color: var(--accent-1);
+        }
+
+        .bg-2 {
+            background-color: var(--accent-2);
+        }
+
+        .bg-3 {
+            background-color: var(--accent-3);
+        }
+
+        .bg-4 {
+            background-color: var(--accent-4);
+            color: #fff;
+        }
+
+        /* Table */
+        .table {
+            border: 3px solid var(--border-color);
+            margin-top: 10px;
+        }
+
+        .table thead th {
+            background-color: var(--text-color);
+            color: #fff;
+            border-bottom: 3px solid var(--border-color);
+            text-transform: uppercase;
+            padding: 15px;
+        }
+
+        .table td {
+            border-bottom: 2px solid var(--border-color);
+            padding: 15px;
+            font-weight: 500;
+        }
+
+        .table-hover tbody tr:hover td {
+            background-color: var(--accent-3);
+        }
+
+        /* Badges */
+        .badge-neo {
+            padding: 8px 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 0;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            box-shadow: 2px 2px 0px var(--shadow-color);
+        }
+
+        .badge-sleep {
+            background-color: var(--accent-1);
+            color: #000;
+        }
+
+        .badge-tv-on {
+            background-color: var(--accent-2);
+            color: #000;
+        }
+
+        .badge-tv-off {
+            background-color: #a8dadc;
+            color: #000;
+        }
+
+        .badge-other {
+            background-color: #e0e0e0;
+            color: #000;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            border: 3px solid var(--border-color);
+            background: #fff;
+            padding: 10px;
+            box-shadow: 5px 5px 0px var(--shadow-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="header-title">Oton-Zzz</h1>
+            <p class="mt-3 fw-bold fs-5 bg-white d-inline-block px-3 py-1 border border-3 border-dark shadow-sm">
+                SYSTEM DASHBOARD
+            </p>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-5">
+            <!-- Sleep Count -->
+            <div class="col-md-3">
+                <div class="neo-card card-1 text-center h-100">
+                    <div class="icon-box bg-1"><i class="bi bi-eye-slash-fill"></i></div>
+                    <div class="stat-label">Sleep Count</div>
+                    <div class="stat-value">{{ stats.sleep_count }}</div>
+                    <div class="fw-bold">TIMES</div>
+                </div>
+            </div>
+
+            <!-- Wasted Time -->
+            <div class="col-md-3">
+                <div class="neo-card card-2 text-center h-100">
+                    <div class="icon-box bg-3"><i class="bi bi-hourglass-split"></i></div>
+                    <div class="stat-label">Wasted Time</div>
+                    <div class="stat-value">{{ stats.wasted_seconds }}</div>
+                    <div class="fw-bold">SECONDS</div>
+                </div>
+            </div>
+
+            <!-- Saved Money -->
+            <div class="col-md-3">
+                <div class="neo-card card-3 text-center h-100">
+                    <div class="icon-box bg-2"><i class="bi bi-piggy-bank-fill"></i></div>
+                    <div class="stat-label">Saved Money</div>
+                    <div class="stat-value">¥{{ stats.estimated_saved_money }}</div>
+                    <div class="fw-bold">ESTIMATED</div>
+                </div>
+            </div>
+
+            <!-- Wasted Money -->
+            <div class="col-md-3">
+                <div class="neo-card card-4 text-center h-100">
+                    <div class="icon-box bg-4"><i class="bi bi-lightning-charge-fill"></i></div>
+                    <div class="stat-label">Wasted Money</div>
+                    <div class="stat-value">¥{{ stats.wasted_money }}</div>
+                    <div class="fw-bold">ACTUAL</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Recent Logs -->
+            <div class="col-lg-8">
+                <div class="neo-card h-100 p-0 overflow-hidden">
+                    <div
+                        class="p-4 border-bottom border-3 border-dark bg-light d-flex justify-content-between align-items-center">
+                        <h4 class="m-0"><i class="bi bi-list-ul me-2"></i>Activity Log</h4>
+                        <span class="badge bg-dark rounded-0 border border-dark">RECENT 20</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle m-0 border-0">
+                            <thead class="d-none">
+                                <tr>
+                                    <th>TIME</th>
+                                    <th>EVENT</th>
+                                    <th>NOTE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td class="fw-bold font-monospace">{{ log.timestamp.split('.')[0].replace('T', ' ')
+                                        }}</td>
+                                    <td>
+                                        {% if log.event_type == 'SLEEP_DETECTED' %}
+                                        <span class="badge-neo badge-sleep">Sleep Detected</span>
+                                        {% elif log.event_type == 'TV_ON' %}
+                                        <span class="badge-neo badge-tv-on">TV ON</span>
+                                        {% elif log.event_type == 'TV_OFF' %}
+                                        <span class="badge-neo badge-tv-off">TV OFF</span>
+                                        {% else %}
+                                        <span class="badge-neo badge-other">{{ log.event_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.note }}
+                                        {% if log.duration > 0 %}
+                                        <span class="ms-2 badge bg-warning text-dark border border-dark rounded-0">{{
+                                            log.duration }}s</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="col-lg-4">
+                <div class="neo-card h-100">
+                    <h4 class="mb-4 text-center border-bottom border-3 border-dark pb-2">IMPACT ANALYSIS</h4>
+                    <div class="chart-container">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                    <div class="mt-3 p-3 bg-light border border-2 border-dark text-center small fw-bold">
+                        <i class="bi bi-info-circle-fill me-1"></i>
+                        ASSUMPTION: 4H IDLE TIME
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js Configuration
+        Chart.defaults.color = '#000';
+        Chart.defaults.font.family = "'Space Grotesk', sans-serif";
+
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['SAVED', 'WASTED'],
+                datasets: [{
+                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
+            backgroundColor: [
+                '#4ecdc4',  // Teal
+                '#ff6b6b'   // Red
+            ],
+            borderColor: '#000',
+            borderWidth: 3,
+            hoverOffset: 10
+        }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'rect',
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        }
+    });
+    </script>
+
+</body>
+
+</html>
