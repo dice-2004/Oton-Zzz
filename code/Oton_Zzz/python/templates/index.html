@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oton-Zzz Dashboard | Neuomorphism</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --bg-color: #e0e5ec;
+            --text-main: #4a5568;
+            --text-light: #a0aec0;
+            --shadow-light: #ffffff;
+            --shadow-dark: #a3b1c6;
+            --accent-blue: #4299e1;
+            --accent-purple: #9f7aea;
+            --accent-red: #f56565;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Nunito', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* Neumorphic Card */
+        .neu-card {
+            background-color: var(--bg-color);
+            border-radius: 20px;
+            box-shadow: 9px 9px 16px var(--shadow-dark),
+                -9px -9px 16px var(--shadow-light);
+            padding: 30px;
+            border: none;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .neu-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 12px 12px 20px var(--shadow-dark),
+                -12px -12px 20px var(--shadow-light);
+        }
+
+        /* Inset Effect (Pressed) */
+        .neu-inset {
+            background-color: var(--bg-color);
+            border-radius: 15px;
+            box-shadow: inset 6px 6px 10px var(--shadow-dark),
+                inset -6px -6px 10px var(--shadow-light);
+            padding: 20px;
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--text-main) 0%, #2d3748 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Stats */
+        .stat-icon-wrapper {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            background-color: var(--bg-color);
+            box-shadow: 5px 5px 10px var(--shadow-dark),
+                -5px -5px 10px var(--shadow-light);
+            color: var(--accent-blue);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 5px 0;
+            color: var(--text-main);
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Buttons */
+        .neu-btn {
+            padding: 10px 20px;
+            border-radius: 50px;
+            background-color: var(--bg-color);
+            box-shadow: 6px 6px 10px var(--shadow-dark),
+                -6px -6px 10px var(--shadow-light);
+            color: var(--accent-blue);
+            font-weight: 700;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .neu-btn:hover {
+            transform: translateY(-1px);
+            color: var(--accent-purple);
+        }
+
+        .neu-btn:active {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark),
+                inset -4px -4px 8px var(--shadow-light);
+            transform: translateY(1px);
+        }
+
+        /* Table */
+        .table {
+            --bs-table-bg: transparent;
+        }
+
+        .table thead th {
+            border-bottom: none;
+            color: var(--text-light);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .table td {
+            border-bottom: 1px solid rgba(163, 177, 198, 0.3);
+            padding: 15px 10px;
+            vertical-align: middle;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* Badges */
+        .badge-neu {
+            padding: 8px 15px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            box-shadow: 3px 3px 6px var(--shadow-dark),
+                -3px -3px 6px var(--shadow-light);
+        }
+
+        .badge-sleep {
+            color: var(--accent-purple);
+        }
+
+        .badge-tv-on {
+            color: var(--accent-blue);
+        }
+
+        .badge-tv-off {
+            color: var(--text-light);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h1 class="header-title">Oton-Zzz</h1>
+                <p class="text-secondary fw-bold m-0">Soft UI Dashboard</p>
+            </div>
+            <button class="neu-btn">
+                <i class="bi bi-gear-fill me-2"></i>Settings
+            </button>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-5">
+            <!-- Sleep Count -->
+            <div class="col-md-3">
+                <div class="neu-card h-100 text-center">
+                    <div class="d-flex justify-content-center">
+                        <div class="stat-icon-wrapper" style="color: var(--accent-purple);">
+                            <i class="bi bi-moon-stars-fill"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">{{ stats.sleep_count }}</div>
+                    <div class="stat-label">Sleep Count</div>
+                </div>
+            </div>
+
+            <!-- Wasted Time -->
+            <div class="col-md-3">
+                <div class="neu-card h-100 text-center">
+                    <div class="d-flex justify-content-center">
+                        <div class="stat-icon-wrapper" style="color: var(--accent-blue);">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">{{ stats.wasted_seconds }}</div>
+                    <div class="stat-label">Wasted Sec</div>
+                </div>
+            </div>
+
+            <!-- Saved Money -->
+            <div class="col-md-3">
+                <div class="neu-card h-100 text-center">
+                    <div class="d-flex justify-content-center">
+                        <div class="stat-icon-wrapper" style="color: #48bb78;">
+                            <i class="bi bi-cash-coin"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">¥{{ stats.estimated_saved_money }}</div>
+                    <div class="stat-label">Est. Savings</div>
+                </div>
+            </div>
+
+            <!-- Wasted Money -->
+            <div class="col-md-3">
+                <div class="neu-card h-100 text-center">
+                    <div class="d-flex justify-content-center">
+                        <div class="stat-icon-wrapper" style="color: var(--accent-red);">
+                            <i class="bi bi-lightning-fill"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">¥{{ stats.wasted_money }}</div>
+                    <div class="stat-label">Actual Cost</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Recent Logs -->
+            <div class="col-lg-8">
+                <div class="neu-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4>Activity Log</h4>
+                        <div class="neu-inset py-1 px-3 rounded-pill text-secondary small fw-bold">
+                            Latest 20
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Event</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td class="text-secondary">{{ log.timestamp.split('.')[0].replace('T', ' ') }}</td>
+                                    <td>
+                                        {% if log.event_type == 'SLEEP_DETECTED' %}
+                                        <span class="badge-neu badge-sleep">
+                                            <i class="bi bi-moon-fill me-1"></i>Sleep
+                                        </span>
+                                        {% elif log.event_type == 'TV_ON' %}
+                                        <span class="badge-neu badge-tv-on">
+                                            <i class="bi bi-tv me-1"></i>TV ON
+                                        </span>
+                                        {% elif log.event_type == 'TV_OFF' %}
+                                        <span class="badge-neu badge-tv-off">
+                                            <i class="bi bi-power me-1"></i>TV OFF
+                                        </span>
+                                        {% else %}
+                                        <span class="badge-neu text-secondary">{{ log.event_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.note }}
+                                        {% if log.duration > 0 %}
+                                        <span class="ms-2 text-secondary small">({{ log.duration }}s)</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="col-lg-4">
+                <div class="neu-card h-100">
+                    <h4 class="mb-4 text-center">Impact</h4>
+                    <div class="neu-inset chart-container d-flex align-items-center justify-content-center">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <button class="neu-btn w-100">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js Configuration
+        Chart.defaults.font.family = "'Nunito', sans-serif";
+        Chart.defaults.color = '#718096';
+
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Saved', 'Wasted'],
+                datasets: [{
+                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
+            backgroundColor: [
+                '#48bb78',  // Green
+                '#f56565'   // Red
+            ],
+            borderColor: '#e0e5ec',
+            borderWidth: 5,
+            hoverOffset: 4
+        }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            }
+        }
+    });
+    </script>
+
+</body>
+
+</html>
