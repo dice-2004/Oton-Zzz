@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oton-Zzz Dashboard | Aurora</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --text-main: #1e293b;
+            --text-light: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.65);
+            --card-border: rgba(255, 255, 255, 0.4);
+            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            color: var(--text-main);
+            background-color: #f0f2f5;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Mesh Gradient Background */
+        .aurora-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background:
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+            background:
+                radial-gradient(at 40% 20%, hsla(28, 100%, 74%, 1) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 1) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 1) 0px, transparent 50%),
+                radial-gradient(at 80% 50%, hsla(340, 100%, 76%, 1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(22, 100%, 77%, 1) 0px, transparent 50%),
+                radial-gradient(at 80% 100%, hsla(242, 100%, 70%, 1) 0px, transparent 50%),
+                radial-gradient(at 0% 0%, hsla(343, 100%, 76%, 1) 0px, transparent 50%);
+            filter: blur(60px);
+            opacity: 0.6;
+            animation: aurora 20s infinite alternate;
+        }
+
+        @keyframes aurora {
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* Glass Card */
+        .aurora-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .aurora-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
+            background: rgba(255, 255, 255, 0.75);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .header-title {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Stats */
+        .stat-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Gradients for text/icons */
+        .grad-blue {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grad-purple {
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grad-pink {
+            background: linear-gradient(135deg, #f472b6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grad-orange {
+            background: linear-gradient(135deg, #fb923c, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .icon-bg-blue {
+            background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+            color: #0284c7;
+        }
+
+        .icon-bg-purple {
+            background: linear-gradient(135deg, #f3e8ff, #d8b4fe);
+            color: #7e22ce;
+        }
+
+        .icon-bg-pink {
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+            color: #db2777;
+        }
+
+        .icon-bg-orange {
+            background: linear-gradient(135deg, #ffedd5, #fed7aa);
+            color: #c2410c;
+        }
+
+        /* Table */
+        .table {
+            --bs-table-bg: transparent;
+        }
+
+        .table thead th {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            color: var(--text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            padding-bottom: 15px;
+        }
+
+        .table td {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 15px 0;
+            vertical-align: middle;
+            font-weight: 500;
+        }
+
+        /* Badges */
+        .badge-aurora {
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            letter-spacing: 0.02em;
+        }
+
+        .badge-sleep {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white;
+            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+        }
+
+        .badge-tv-on {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-tv-off {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        /* Chart */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="aurora-bg"></div>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="header-title">Oton-Zzz</h1>
+            <p class="text-secondary fw-bold"
+                style="letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.8rem;">
+                Intelligent Sleep Monitoring
+            </p>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-5">
+            <!-- Sleep Count -->
+            <div class="col-md-3">
+                <div class="aurora-card h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="stat-label">Sleep Count</div>
+                            <div class="stat-value grad-purple">{{ stats.sleep_count }}</div>
+                        </div>
+                        <div class="stat-icon icon-bg-purple">
+                            <i class="bi bi-moon-stars-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wasted Time -->
+            <div class="col-md-3">
+                <div class="aurora-card h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="stat-label">Idle Time</div>
+                            <div class="stat-value grad-blue">{{ stats.wasted_seconds }}</div>
+                        </div>
+                        <div class="stat-icon icon-bg-blue">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Money -->
+            <div class="col-md-3">
+                <div class="aurora-card h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="stat-label">Est. Savings</div>
+                            <div class="stat-value grad-pink">¥{{ stats.estimated_saved_money }}</div>
+                        </div>
+                        <div class="stat-icon icon-bg-pink">
+                            <i class="bi bi-piggy-bank-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wasted Money -->
+            <div class="col-md-3">
+                <div class="aurora-card h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="stat-label">Actual Cost</div>
+                            <div class="stat-value grad-orange">¥{{ stats.wasted_money }}</div>
+                        </div>
+                        <div class="stat-icon icon-bg-orange">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Recent Logs -->
+            <div class="col-lg-8">
+                <div class="aurora-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="m-0">Activity Log</h4>
+                        <button class="btn btn-light rounded-pill px-3 py-1 text-secondary fw-bold small">View
+                            All</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Event</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td class="text-secondary fw-bold" style="font-size: 0.9rem;">{{
+                                        log.timestamp.split('.')[0].replace('T', ' ') }}</td>
+                                    <td>
+                                        {% if log.event_type == 'SLEEP_DETECTED' %}
+                                        <span class="badge-aurora badge-sleep">Sleep Detected</span>
+                                        {% elif log.event_type == 'TV_ON' %}
+                                        <span class="badge-aurora badge-tv-on">TV ON</span>
+                                        {% elif log.event_type == 'TV_OFF' %}
+                                        <span class="badge-aurora badge-tv-off">TV OFF</span>
+                                        {% else %}
+                                        <span class="badge-aurora bg-light text-dark">{{ log.event_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.note }}
+                                        {% if log.duration > 0 %}
+                                        <span class="ms-2 fw-bold grad-blue">{{ log.duration }}s</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="col-lg-4">
+                <div class="aurora-card h-100">
+                    <h4 class="mb-4">Impact Analysis</h4>
+                    <div class="chart-container">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                    <div class="mt-4 p-3 rounded-4 text-center small fw-bold"
+                        style="background: rgba(255,255,255,0.5);">
+                        <i class="bi bi-info-circle-fill me-1 text-primary"></i>
+                        Based on 4h average idle time
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js Configuration
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.color = '#64748b';
+
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Saved', 'Wasted'],
+                datasets: [{
+                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
+            backgroundColor: [
+                '#ec4899',  // Pink
+                '#f97316'   // Orange
+            ],
+            borderWidth: 0,
+            hoverOffset: 10
+        }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '75%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            size: 12,
+                            weight: 600
+                        }
+                    }
+                }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        }
+    });
+    </script>
+
+</body>
+
+</html>
