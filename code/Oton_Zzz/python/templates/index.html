@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oton-Zzz ダッシュボード | 和風</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Noto Serif JP -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;500;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --bg-color: #fcfaf2;
+            /* 生成り色 */
+            --text-color: #2b2b2b;
+            /* 墨色 */
+            --card-bg: #ffffff;
+            --border-color: #dcd3b2;
+
+            /* 日本の伝統色 */
+            --ai-iro: #2e4b71;
+            /* 藍色 */
+            --shu-iro: #b93a32;
+            /* 朱色 */
+            --uguisu-iro: #6c845d;
+            /* 鶯色 */
+            --yamabuki-iro: #d4af37;
+            /* 山吹色 */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Noto Serif JP', serif;
+            min-height: 100vh;
+            /* 和紙風のノイズ */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+
+        /* Wafu Card */
+        .wafu-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(46, 75, 113, 0.05);
+            position: relative;
+        }
+
+        /* 縦書きのアクセント線 */
+        .wafu-card::before {
+            content: "";
+            position: absolute;
+            top: 15px;
+            left: 10px;
+            width: 3px;
+            height: 30px;
+            background-color: var(--ai-iro);
+            border-radius: 2px;
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            color: var(--text-color);
+            border-bottom: 2px solid var(--shu-iro);
+            padding-bottom: 10px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .header-subtitle {
+            color: var(--ai-iro);
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+        }
+
+        /* Stats */
+        .stat-value {
+            font-size: 2.8rem;
+            font-weight: 500;
+            margin: 10px 0;
+            color: var(--text-color);
+            font-feature-settings: "palt";
+        }
+
+        .stat-label {
+            color: var(--ai-iro);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .unit {
+            font-size: 1rem;
+            margin-left: 5px;
+            color: #666;
+        }
+
+        /* Hanko Style Badge */
+        .hanko {
+            display: inline-block;
+            border: 2px solid var(--shu-iro);
+            color: var(--shu-iro);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            line-height: 56px;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transform: rotate(-15deg);
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        /* Table */
+        .table {
+            color: var(--text-color);
+            margin-top: 10px;
+        }
+
+        .table thead th {
+            color: var(--ai-iro);
+            border-bottom: 2px solid var(--border-color);
+            font-weight: 500;
+        }
+
+        .table td {
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        /* Badges */
+        .badge-wafu {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            border: 1px solid transparent;
+        }
+
+        .badge-sleep {
+            background-color: #fff0f0;
+            color: var(--shu-iro);
+            border-color: var(--shu-iro);
+        }
+
+        .badge-tv-on {
+            background-color: #f0f7ff;
+            color: var(--ai-iro);
+            border-color: var(--ai-iro);
+        }
+
+        .badge-tv-off {
+            background-color: #f5f5f5;
+            color: #666;
+            border-color: #999;
+        }
+
+        /* Seigaiha Pattern (CSS) */
+        .seigaiha-bg {
+            background-color: var(--ai-iro);
+            background-image: radial-gradient(circle at 100% 150%, var(--bg-color) 24%, var(--ai-iro) 25%, var(--ai-iro) 28%, var(--bg-color) 29%, var(--bg-color) 36%, var(--ai-iro) 36%, var(--ai-iro) 40%, transparent 40%, transparent),
+                radial-gradient(circle at 0 150%, var(--bg-color) 24%, var(--ai-iro) 25%, var(--ai-iro) 28%, var(--bg-color) 29%, var(--bg-color) 36%, var(--ai-iro) 36%, var(--ai-iro) 40%, transparent 40%, transparent),
+                radial-gradient(circle at 50% 100%, var(--ai-iro) 10%, var(--bg-color) 11%, var(--bg-color) 23%, var(--ai-iro) 24%, var(--ai-iro) 30%, var(--bg-color) 31%, var(--bg-color) 43%, var(--ai-iro) 44%, var(--ai-iro) 50%, var(--bg-color) 51%, var(--bg-color) 63%, var(--ai-iro) 64%, var(--ai-iro) 71%, transparent 71%, transparent),
+                radial-gradient(circle at 100% 50%, var(--ai-iro) 5%, var(--bg-color) 6%, var(--bg-color) 15%, var(--ai-iro) 16%, var(--ai-iro) 20%, var(--bg-color) 21%, var(--bg-color) 30%, var(--ai-iro) 31%, var(--ai-iro) 35%, var(--bg-color) 36%, var(--bg-color) 45%, var(--ai-iro) 46%, var(--ai-iro) 49%, transparent 50%, transparent),
+                radial-gradient(circle at 0 50%, var(--ai-iro) 5%, var(--bg-color) 6%, var(--bg-color) 15%, var(--ai-iro) 16%, var(--ai-iro) 20%, var(--bg-color) 21%, var(--bg-color) 30%, var(--ai-iro) 31%, var(--ai-iro) 35%, var(--bg-color) 36%, var(--bg-color) 45%, var(--ai-iro) 46%, var(--ai-iro) 49%, transparent 50%, transparent);
+            background-size: 50px 25px;
+            color: white;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="header-title">音 - Zzz</h1>
+            <br>
+            <span class="header-subtitle">睡眠検知システム</span>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-5">
+            <!-- Sleep Count -->
+            <div class="col-md-3">
+                <div class="wafu-card text-center h-100">
+                    <div class="hanko">寝落</div>
+                    <div class="stat-label">今週の寝落ち</div>
+                    <div class="stat-value">{{ stats.sleep_count }}<span class="unit">回</span></div>
+                </div>
+            </div>
+
+            <!-- Wasted Time -->
+            <div class="col-md-3">
+                <div class="wafu-card text-center h-100">
+                    <div class="stat-label" style="color: var(--uguisu-iro);">無駄になった時間</div>
+                    <div class="stat-value">{{ stats.wasted_seconds }}<span class="unit">秒</span></div>
+                    <div class="small text-muted">警告から消灯まで</div>
+                </div>
+            </div>
+
+            <!-- Saved Money -->
+            <div class="col-md-3">
+                <div class="wafu-card text-center h-100">
+                    <div class="stat-label" style="color: var(--yamabuki-iro);">推定節約額</div>
+                    <div class="stat-value">¥{{ stats.estimated_saved_money }}</div>
+                    <div class="small text-muted">朝までついていたら...</div>
+                </div>
+            </div>
+
+            <!-- Wasted Money -->
+            <div class="col-md-3">
+                <div class="wafu-card text-center h-100">
+                    <div class="stat-label" style="color: var(--shu-iro);">実際の電気代</div>
+                    <div class="stat-value">¥{{ stats.wasted_money }}</div>
+                    <div class="small text-muted">消灯までのコスト</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Recent Logs -->
+            <div class="col-lg-8">
+                <div class="wafu-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2"
+                        style="border-color: var(--border-color) !important;">
+                        <h4 class="m-0">活動履歴</h4>
+                        <span class="text-muted small">最新20件</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>日時</th>
+                                    <th>出来事</th>
+                                    <th>詳細</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td style="font-family: monospace; color: #666;">{{
+                                        log.timestamp.split('.')[0].replace('T', ' ') }}</td>
+                                    <td>
+                                        {% if log.event_type == 'SLEEP_DETECTED' %}
+                                        <span class="badge-wafu badge-sleep">睡眠検知</span>
+                                        {% elif log.event_type == 'TV_ON' %}
+                                        <span class="badge-wafu badge-tv-on">点灯</span>
+                                        {% elif log.event_type == 'TV_OFF' %}
+                                        <span class="badge-wafu badge-tv-off">消灯</span>
+                                        {% else %}
+                                        <span class="badge-wafu" style="border: 1px solid #ccc;">{{ log.event_type
+                                            }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.note }}
+                                        {% if log.duration > 0 %}
+                                        <span class="ms-2" style="color: var(--yamabuki-iro);">({{ log.duration
+                                            }}秒)</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="col-lg-4">
+                <div class="wafu-card h-100">
+                    <h4 class="mb-4 text-center">節約効果</h4>
+                    <div style="height: 300px;">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                    <div class="mt-4 p-3 text-center small" style="background-color: #f9f9f9; border-radius: 4px;">
+                        ※ 一回の寝落ちで平均4時間テレビがついていると仮定
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js Configuration
+        Chart.defaults.color = '#2b2b2b';
+        Chart.defaults.font.family = "'Noto Serif JP', serif";
+
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['節約額', '浪費額'],
+                datasets: [{
+                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
+            backgroundColor: [
+                '#6c845d',  // 鶯色 (Green)
+                '#b93a32'   // 朱色 (Red)
+            ],
+            borderColor: '#fcfaf2',
+            borderWidth: 2,
+            hoverOffset: 10
+        }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            }
+        }
+    });
+    </script>
+
+</body>
+
+</html>
