@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oton-Zzz Dashboard | 8-bit RPG</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Press Start 2P -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --border-color: #ffffff;
+            --accent-red: #ff3333;
+            --accent-green: #33ff33;
+            --accent-blue: #3333ff;
+            --accent-yellow: #ffff33;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            /* Pixel fonts need to be smaller */
+            line-height: 1.5;
+            min-height: 100vh;
+            image-rendering: pixelated;
+        }
+
+        /* RPG Window Box */
+        .rpg-card {
+            background-color: #000;
+            border: 4px solid white;
+            padding: 20px;
+            margin-bottom: 24px;
+            position: relative;
+            box-shadow:
+                inset 0 0 0 4px #000,
+                /* Inner black border */
+                inset 0 0 0 6px #fff;
+            /* Inner white border */
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            text-transform: uppercase;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .header-title {
+            font-size: 2rem;
+            color: var(--accent-yellow);
+            text-shadow: 4px 4px 0 #ff0000;
+            margin-bottom: 1rem;
+        }
+
+        /* Stats */
+        .stat-value {
+            font-size: 1.5rem;
+            margin: 15px 0;
+            color: var(--text-color);
+        }
+
+        .stat-label {
+            color: var(--accent-blue);
+            font-size: 0.7rem;
+            margin-bottom: 5px;
+        }
+
+        /* HP/MP Bar Style */
+        .rpg-bar-container {
+            width: 100%;
+            height: 16px;
+            background-color: #333;
+            border: 2px solid white;
+            margin-top: 5px;
+            position: relative;
+        }
+
+        .rpg-bar {
+            height: 100%;
+            background-color: var(--accent-green);
+        }
+
+        .bar-red {
+            background-color: var(--accent-red);
+        }
+
+        .bar-blue {
+            background-color: var(--accent-blue);
+        }
+
+        .bar-yellow {
+            background-color: var(--accent-yellow);
+        }
+
+        /* Table */
+        .table {
+            --bs-table-bg: transparent;
+            color: white;
+            font-size: 0.7rem;
+        }
+
+        .table thead th {
+            border-bottom: 4px solid white;
+            color: var(--accent-yellow);
+            padding: 10px;
+        }
+
+        .table td {
+            border-bottom: 2px dashed #666;
+            padding: 10px;
+            vertical-align: middle;
+        }
+
+        /* Badges */
+        .badge-rpg {
+            padding: 4px 8px;
+            border: 2px solid white;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            background: #000;
+        }
+
+        .badge-sleep {
+            color: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+
+        .badge-tv-on {
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .badge-tv-off {
+            color: #aaa;
+            border-color: #aaa;
+        }
+
+        /* Cursor Animation */
+        .cursor-icon {
+            display: inline-block;
+            animation: blink 1s infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            border: 2px solid white;
+            padding: 10px;
+            background: #111;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="header-title">OTON-ZZZ QUEST</h1>
+            <p class="text-white">LV. 99 SLEEP MONITORING SYSTEM</p>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-5">
+            <!-- Sleep Count -->
+            <div class="col-md-3">
+                <div class="rpg-card h-100">
+                    <div class="stat-label">SLEEP (EXP)</div>
+                    <div class="stat-value">{{ stats.sleep_count }}</div>
+                    <div class="rpg-bar-container">
+                        <div class="rpg-bar bar-blue" style="width: 70%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wasted Time -->
+            <div class="col-md-3">
+                <div class="rpg-card h-100">
+                    <div class="stat-label">IDLE TIME</div>
+                    <div class="stat-value">{{ stats.wasted_seconds }}s</div>
+                    <div class="rpg-bar-container">
+                        <div class="rpg-bar bar-red" style="width: 45%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Money -->
+            <div class="col-md-3">
+                <div class="rpg-card h-100">
+                    <div class="stat-label">GOLD SAVED</div>
+                    <div class="stat-value text-warning">{{ stats.estimated_saved_money }}G</div>
+                    <div class="rpg-bar-container">
+                        <div class="rpg-bar bar-yellow" style="width: 90%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wasted Money -->
+            <div class="col-md-3">
+                <div class="rpg-card h-100">
+                    <div class="stat-label">GOLD LOST</div>
+                    <div class="stat-value text-danger">{{ stats.wasted_money }}G</div>
+                    <div class="rpg-bar-container">
+                        <div class="rpg-bar bar-red" style="width: 20%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Recent Logs -->
+            <div class="col-lg-8">
+                <div class="rpg-card h-100">
+                    <div class="mb-4">
+                        <h4><span class="cursor-icon">▶</span>ADVENTURE LOG</h4>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>TIME</th>
+                                    <th>ACTION</th>
+                                    <th>NOTE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td>{{ log.timestamp.split('.')[0].replace('T', ' ') }}</td>
+                                    <td>
+                                        {% if log.event_type == 'SLEEP_DETECTED' %}
+                                        <span class="badge-rpg badge-sleep">SLEEP!</span>
+                                        {% elif log.event_type == 'TV_ON' %}
+                                        <span class="badge-rpg badge-tv-on">TV ON</span>
+                                        {% elif log.event_type == 'TV_OFF' %}
+                                        <span class="badge-rpg badge-tv-off">TV OFF</span>
+                                        {% else %}
+                                        <span class="badge-rpg">{{ log.event_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.note }}
+                                        {% if log.duration > 0 %}
+                                        <span class="ms-2 text-warning">[{{ log.duration }}s]</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="col-lg-4">
+                <div class="rpg-card h-100">
+                    <h4 class="mb-4 text-center">STATUS</h4>
+                    <div class="chart-container">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small text-secondary">
+                        * ESTIMATED VALUES
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js Configuration
+        Chart.defaults.font.family = "'Press Start 2P', cursive";
+        Chart.defaults.font.size = 10;
+        Chart.defaults.color = '#ffffff';
+
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['SAVED', 'LOST'],
+                datasets: [{
+                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
+            backgroundColor: [
+                '#ffff33',  // Yellow
+                '#ff3333'   // Red
+            ],
+            borderColor: '#000000',
+            borderWidth: 4,
+            hoverOffset: 0
+        }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '50%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'rect'
+                    }
+                }
+            }
+        }
+    });
+    </script>
+
+</body>
+
+</html>
