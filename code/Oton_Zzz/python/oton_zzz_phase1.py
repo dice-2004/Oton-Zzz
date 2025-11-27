@@ -248,7 +248,7 @@ def main():
                             ir_monitor.resume()
 
                             # ログ記録
-                            db_manager.log_event('SLEEP_DETECTED', duration=detector.final_confirmation_time, note="自動OFF")
+                            db_manager.log_event('SLEEP_DETECTED', duration=detector.FINAL_CONFIRMATION_TIME, note="自動OFF")
 
                             # システムをSLEEP状態に
                             system_state.set_sleep()
