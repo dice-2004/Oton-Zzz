@@ -18,7 +18,8 @@ from voice_controller import VoiceController
 from tv_state_manager import TVStateManager
 from ir_sleep_detector import IRController, SleepDetector
 from ir_monitor import IRMonitor
-from system_state_manager import SystemStateManager, SystemState
+from system_state_manager import SystemStateManager
+from database_manager import DatabaseManager  # NEW, SystemState
 
 
 def main():
@@ -51,6 +52,10 @@ def main():
     # システム状態管理
     print("🔄 システム状態管理を初期化しています...")
     system_state = SystemStateManager()
+
+    # データベース管理
+    print("📝 データベース管理を初期化しています...")
+    db_manager = DatabaseManager()
 
     # テレビの初期状態に合わせてシステム状態を設定
     if tv_state.is_on:
@@ -160,6 +165,7 @@ def main():
                         if led_enabled:
                             led.set_normal()
                         voice.speak("テレビがつきました。睡眠検出を開始します。")
+                        db_manager.log_event('TV_ON', note="リモコン操作")  # LOG
 
                         # 通知フラグをリセット
                         notified_stage1 = False
@@ -174,6 +180,7 @@ def main():
                         if led_enabled:
                             led.all_off()
                         voice.speak("テレビが消されました。待機モードに入ります。")
+                        db_manager.log_event('TV_OFF', note="リモコン操作")  # LOG
 
                         # 通知フラグをリセット
                         notified_stage1 = False
@@ -239,6 +246,9 @@ def main():
 
                             # IR監視を再開
                             ir_monitor.resume()
+
+                            # ログ記録
+                            db_manager.log_event('SLEEP_DETECTED', duration=detector.final_confirmation_time, note="自動OFF")
 
                             # システムをSLEEP状態に
                             system_state.set_sleep()
