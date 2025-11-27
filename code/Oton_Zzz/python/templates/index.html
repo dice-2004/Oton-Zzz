@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oton-Zzz Dashboard | Sketch</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Patrick Hand -->
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --paper-bg: #fdfbf7;
+            --pencil-color: #2c3e50;
+            --line-color: #a8d0e6;
+            --highlight-yellow: rgba(255, 235, 59, 0.5);
+            --highlight-pink: rgba(255, 99, 132, 0.4);
+            --highlight-blue: rgba(54, 162, 235, 0.4);
+            --highlight-green: rgba(75, 192, 192, 0.4);
+        }
+
+        body {
+            background-color: var(--paper-bg);
+            color: var(--pencil-color);
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1.3rem;
+            min-height: 100vh;
+            /* Graph Paper Pattern */
+            background-image:
+                linear-gradient(var(--line-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--line-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: center top;
+        }
+
+        /* Sketchy Card */
+        .sketch-card {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 25px;
+            /* Wobbly Border Trick */
+            border: 2px solid var(--pencil-color);
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+            position: relative;
+        }
+
+        .sketch-card:hover {
+            transform: rotate(-1deg) scale(1.02);
+            box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        /* Tape Effect */
+        .tape {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            width: 100px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.6);
+            border-left: 1px dashed rgba(0, 0, 0, 0.1);
+            border-right: 1px dashed rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .header-title {
+            font-size: 4rem;
+            display: inline-block;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-title::after {
+            content: "";
+            position: absolute;
+            bottom: 10px;
+            left: -10px;
+            width: 110%;
+            height: 20px;
+            background: var(--highlight-yellow);
+            z-index: -1;
+            transform: rotate(-1deg);
+            border-radius: 20px;
+        }
+
+        /* Stats */
+        .stat-value {
+            font-size: 3.5rem;
+            font-weight: bold;
+            line-height: 1;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            border-bottom: 2px dashed var(--pencil-color);
+            display: inline-block;
+        }
+
+        .icon-doodle {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            animation: wiggle 3s ease-in-out infinite;
+        }
+
+        @keyframes wiggle {
+
+            0%,
+            100% {
+                transform: rotate(-5deg);
+            }
+
+            50% {
+                transform: rotate(5deg);
+            }
+        }
+
+        /* Table */
+        .table {
+            --bs-table-bg: transparent;
+        }
+
+        .table thead th {
+            border-bottom: 3px solid var(--pencil-color);
+            font-size: 1.2rem;
+        }
+
+        .table td {
+            border-bottom: 1px solid var(--pencil-color);
+            vertical-align: middle;
+        }
+
+        /* Badges (Highlighter style) */
+        .badge-sketch {
+            padding: 2px 10px;
+            border-radius: 5px;
+            font-weight: normal;
+            color: var(--pencil-color);
+        }
+
+        .badge-sleep {
+            background: var(--highlight-pink);
+            transform: rotate(-2deg);
+            display: inline-block;
+        }
+
+        .badge-tv-on {
+            background: var(--highlight-green);
+            transform: rotate(1deg);
+            display: inline-block;
+        }
+
+        .badge-tv-off {
+            background: #ddd;
+            transform: rotate(-1deg);
+            display: inline-block;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Scribbles */
+        .scribble {
+            position: absolute;
+            z-index: -1;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="header-title">Oton-Zzz</h1>
+            <p class="mt-2" style="transform: rotate(-2deg);">My Sleep Log ✏️</p>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-5">
+            <!-- Sleep Count -->
+            <div class="col-md-3">
+                <div class="sketch-card text-center h-100">
+                    <div class="tape"></div>
+                    <div class="icon-doodle text-primary">
+                        <i class="bi bi-moon-stars"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.sleep_count }}</div>
+                    <div class="stat-label">Sleep Count</div>
+                </div>
+            </div>
+
+            <!-- Wasted Time -->
+            <div class="col-md-3">
+                <div class="sketch-card text-center h-100">
+                    <div class="tape" style="transform: translateX(-50%) rotate(1deg);"></div>
+                    <div class="icon-doodle text-info">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.wasted_seconds }}</div>
+                    <div class="stat-label">Idle Seconds</div>
+                </div>
+            </div>
+
+            <!-- Saved Money -->
+            <div class="col-md-3">
+                <div class="sketch-card text-center h-100">
+                    <div class="tape" style="transform: translateX(-50%) rotate(-3deg);"></div>
+                    <div class="icon-doodle text-success">
+                        <i class="bi bi-piggy-bank"></i>
+                    </div>
+                    <div class="stat-value">¥{{ stats.estimated_saved_money }}</div>
+                    <div class="stat-label">Savings</div>
+                </div>
+            </div>
+
+            <!-- Wasted Money -->
+            <div class="col-md-3">
+                <div class="sketch-card text-center h-100">
+                    <div class="tape" style="transform: translateX(-50%) rotate(2deg);"></div>
+                    <div class="icon-doodle text-danger">
+                        <i class="bi bi-lightning-charge"></i>
+                    </div>
+                    <div class="stat-value">¥{{ stats.wasted_money }}</div>
+                    <div class="stat-label">Cost</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Recent Logs -->
+            <div class="col-lg-8">
+                <div class="sketch-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 style="text-decoration: underline wavy var(--highlight-blue);">Activity Log</h3>
+                        <span class="text-muted small">Recent 20</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>When?</th>
+                                    <th>What?</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td>{{ log.timestamp.split('.')[0].replace('T', ' ') }}</td>
+                                    <td>
+                                        {% if log.event_type == 'SLEEP_DETECTED' %}
+                                        <span class="badge-sketch badge-sleep">Sleep!</span>
+                                        {% elif log.event_type == 'TV_ON' %}
+                                        <span class="badge-sketch badge-tv-on">TV On</span>
+                                        {% elif log.event_type == 'TV_OFF' %}
+                                        <span class="badge-sketch badge-tv-off">TV Off</span>
+                                        {% else %}
+                                        <span class="badge-sketch">{{ log.event_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.note }}
+                                        {% if log.duration > 0 %}
+                                        <span class="ms-2" style="background: var(--highlight-yellow);">{{ log.duration
+                                            }}s</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="col-lg-4">
+                <div class="sketch-card h-100">
+                    <h3 class="mb-4 text-center" style="text-decoration: underline wavy var(--highlight-pink);">Impact
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <i class="bi bi-pencil-fill me-1"></i>
+                        Rough estimate based on 4h idle time
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js Configuration
+        Chart.defaults.font.family = "'Patrick Hand', cursive";
+        Chart.defaults.font.size = 16;
+        Chart.defaults.color = '#2c3e50';
+
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Saved', 'Wasted'],
+                datasets: [{
+                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
+            backgroundColor: [
+                'rgba(75, 192, 192, 0.6)',  // Greenish
+                'rgba(255, 99, 132, 0.6)'   // Pinkish
+            ],
+            borderColor: '#2c3e50',
+            borderWidth: 2,
+            hoverOffset: 10
+        }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'rectRot'
+                    }
+                }
+            }
+        }
+    });
+    </script>
+
+</body>
+
+</html>
