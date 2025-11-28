@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oton-Zzz | おとん、おやすみ。</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: M PLUS Rounded 1c -->
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            /* Colors extracted from the logo image */
+            --brand-blue: #5ba4cf;
+            /* Oton Blue */
+            --brand-green: #9ccb5b;
+            /* Zzz Green/Leaf */
+            --brand-yellow: #fdd875;
+            /* Zzz Yellow/Moon */
+            --brand-text: #4a4a4a;
+            /* Dark Grey Text */
+            --bg-color: #f9fbfd;
+            /* Very light blueish white */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--brand-text);
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* Header Section */
+        .brand-header {
+            text-align: center;
+            padding: 40px 0;
+            background: white;
+            border-bottom: 5px solid var(--brand-green);
+            border-radius: 0 0 50% 50% / 0 0 20px 20px;
+            box-shadow: 0 4px 15px rgba(156, 203, 91, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .logo-text {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .logo-oton {
+            color: var(--brand-blue);
+        }
+
+        .logo-hyphen {
+            color: var(--brand-blue);
+        }
+
+        .logo-z1 {
+            color: var(--brand-green);
+        }
+
+        .logo-z2 {
+            color: var(--brand-yellow);
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-z3 {
+            color: var(--brand-green);
+        }
+
+        .catchphrase {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--brand-text);
+            letter-spacing: 1px;
+        }
+
+        /* Cards */
+        .brand-card {
+            background: white;
+            border: none;
+            border-radius: 25px;
+            padding: 25px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px rgba(91, 164, 207, 0.08);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Leaf Decoration */
+        .leaf-deco {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 4rem;
+            color: rgba(156, 203, 91, 0.1);
+            transform: rotate(15deg);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-weight: 700;
+            color: var(--brand-blue);
+        }
+
+        /* Stats */
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 10px 0;
+            color: var(--brand-text);
+        }
+
+        .stat-label {
+            color: #888;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .stat-icon-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 15px;
+            color: white;
+        }
+
+        .bg-blue {
+            background-color: var(--brand-blue);
+        }
+
+        .bg-green {
+            background-color: var(--brand-green);
+        }
+
+        .bg-yellow {
+            background-color: var(--brand-yellow);
+        }
+
+        .bg-red {
+            background-color: #ff8a80;
+        }
+
+        /* Table */
+        .table {
+            --bs-table-bg: transparent;
+        }
+
+        .table thead th {
+            border-bottom: 2px solid var(--brand-blue);
+            color: var(--brand-blue);
+            font-weight: 700;
+        }
+
+        .table td {
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+            font-weight: 500;
+            padding: 15px 10px;
+        }
+
+        /* Badges */
+        .badge-brand {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .badge-sleep {
+            background-color: var(--brand-blue);
+            color: white;
+        }
+
+        .badge-tv-on {
+            background-color: var(--brand-green);
+            color: white;
+        }
+
+        .badge-tv-off {
+            background-color: #eee;
+            color: #888;
+        }
+
+        /* Chart */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="brand-header">
+        <div class="container">
+            <div class="logo-text">
+                <span class="logo-oton">Oton</span><span class="logo-hyphen">-</span><span class="logo-z1">Z</span><span
+                    class="logo-z2">z</span><span class="logo-z3">z</span>
+            </div>
+            <p class="catchphrase">
+                おとん、おやすみ。<br class="d-block d-sm-none">テレビも、おやすみ。
+            </p>
+        </div>
+    </header>
+
+    <div class="container pb-5">
+        <!-- Stats Row -->
+        <div class="row g-4 mb-5">
+            <!-- Sleep Count -->
+            <div class="col-md-3">
+                <div class="brand-card text-center h-100">
+                    <i class="bi bi-flower1 leaf-deco"></i>
+                    <div class="stat-icon-circle bg-blue">
+                        <i class="bi bi-moon-stars-fill"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.sleep_count }}</div>
+                    <div class="stat-label">おやすみ回数</div>
+                </div>
+            </div>
+
+            <!-- Wasted Time -->
+            <div class="col-md-3">
+                <div class="brand-card text-center h-100">
+                    <div class="stat-icon-circle bg-green">
+                        <i class="bi bi-stopwatch-fill"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.wasted_seconds }}</div>
+                    <div class="stat-label">つけっぱなし時間 (秒)</div>
+                </div>
+            </div>
+
+            <!-- Saved Money -->
+            <div class="col-md-3">
+                <div class="brand-card text-center h-100">
+                    <div class="stat-icon-circle bg-yellow">
+                        <i class="bi bi-piggy-bank-fill"></i>
+                    </div>
+                    <div class="stat-value">¥{{ stats.estimated_saved_money }}</div>
+                    <div class="stat-label">節約できたお金</div>
+                </div>
+            </div>
+
+            <!-- Wasted Money -->
+            <div class="col-md-3">
+                <div class="brand-card text-center h-100">
+                    <div class="stat-icon-circle bg-red">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                    </div>
+                    <div class="stat-value">¥{{ stats.wasted_money }}</div>
+                    <div class="stat-label">かかってしまった電気代</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Recent Logs -->
+            <div class="col-lg-8">
+                <div class="brand-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="bi bi-journal-text me-2"></i>活動記録</h4>
+                        <span class="badge bg-light text-secondary rounded-pill">最新20件</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>時間</th>
+                                    <th>できごと</th>
+                                    <th>メモ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td class="text-secondary">{{ log.timestamp.split('.')[0].replace('T', ' ') }}</td>
+                                    <td>
+                                        {% if log.event_type == 'SLEEP_DETECTED' %}
+                                        <span class="badge-brand badge-sleep">
+                                            <i class="bi bi-moon-fill me-1"></i>おやすみ
+                                        </span>
+                                        {% elif log.event_type == 'TV_ON' %}
+                                        <span class="badge-brand badge-tv-on">
+                                            <i class="bi bi-tv me-1"></i>テレビON
+                                        </span>
+                                        {% elif log.event_type == 'TV_OFF' %}
+                                        <span class="badge-brand badge-tv-off">
+                                            <i class="bi bi-power me-1"></i>テレビOFF
+                                        </span>
+                                        {% else %}
+                                        <span class="badge-brand bg-light text-dark">{{ log.event_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.note }}
+                                        {% if log.duration > 0 %}
+                                        <span class="ms-2 fw-bold text-primary">({{ log.duration }}秒)</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="col-lg-4">
+                <div class="brand-card h-100">
+                    <h4 class="mb-4 text-center">節約効果</h4>
+                    <div class="chart-container">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small text-secondary">
+                        <i class="bi bi-info-circle-fill me-1"></i>
+                        4時間のつけっぱなしを防止した場合の試算
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js Configuration
+        Chart.defaults.font.family = "'M PLUS Rounded 1c', sans-serif";
+        Chart.defaults.color = '#4a4a4a';
+
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['節約できた', '無駄になった'],
+                datasets: [{
+                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
+            backgroundColor: [
+                '#9ccb5b',  // Brand Green
+                '#ff8a80'   // Soft Red
+            ],
+            borderColor: '#ffffff',
+            borderWidth: 4,
+            hoverOffset: 10
+        }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        }
+    });
+    </script>
+
+</body>
+
+</html>
