@@ -1,0 +1,16 @@
+[Unit]
+Description=Oton-Zzz Headless Calibration Service
+After=network.target
+
+[Service]
+Type=simple
+User=hxs_jphacks
+WorkingDirectory=/home/hxs_jphacks/Oton-Zzz/code/Oton_Zzz/python
+ExecStart=/usr/bin/python3 /home/hxs_jphacks/Oton-Zzz/code/Oton_Zzz/python/calibration_headless.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

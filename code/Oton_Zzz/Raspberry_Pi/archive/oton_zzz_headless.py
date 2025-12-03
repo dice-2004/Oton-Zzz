@@ -139,7 +139,7 @@ def main():
 
     try:
         with FaceLandmarker.create_from_options(options) as landmarker:
-            voice.speak("おとんずずず、起動しました。")
+            voice.speak("おとんZzz、起動しました。")
 
             if led:
                 if system_state.is_active():

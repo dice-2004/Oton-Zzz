@@ -1,0 +1,20 @@
+[Unit]
+Description=Oton-Zzz Sleep Detection Service
+After=network.target sound.target
+
+[Service]
+Type=simple
+User=hxs_jphacks
+WorkingDirectory=/home/hxs_jphacks/Oton-Zzz/code/Oton_Zzz/Raspberry_Pi
+ExecStart=/usr/bin/python3 /home/hxs_jphacks/Oton-Zzz/code/Oton_Zzz/Raspberry_Pi/main.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# 環境変数
+Environment="DISPLAY=:0"
+Environment="XAUTHORITY=/home/hxs_jphacks/.Xauthority"
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/hxs_jphacks/Oton-Zzz/code/Oton_Zzz/python/dashboard.py", line 27, in <module>
+    app.run(host='0.0.0.0', port=port, debug=True)
+  File "/home/hxs_jphacks/Oton-Zzz/.venv/lib/python3.12/site-packages/flask/app.py", line 662, in run
+    run_simple(t.cast(str, host), port, self, **options)
+  File "/home/hxs_jphacks/Oton-Zzz/.venv/lib/python3.12/site-packages/werkzeug/serving.py", line 1115, in run_simple
+    run_with_reloader(
+  File "/home/hxs_jphacks/Oton-Zzz/.venv/lib/python3.12/site-packages/werkzeug/_reloader.py", line 459, in run_with_reloader
+    ensure_echo_on()
+  File "/home/hxs_jphacks/Oton-Zzz/.venv/lib/python3.12/site-packages/werkzeug/_reloader.py", line 439, in ensure_echo_on
+    termios.tcsetattr(sys.stdin, termios.TCSANOW, attributes)
+termios.error: (5, 'Input/output error')

@@ -1,5 +1,6 @@
 .venv/
 __pycache__/
 *.json
+!config_template.json
 *.db
 demos/

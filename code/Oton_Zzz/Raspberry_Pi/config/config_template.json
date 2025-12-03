@@ -1,0 +1,30 @@
+{
+    "sleep_detection": {
+        "blink_threshold": 0.5,
+        "gauge_max": 5.0,
+        "gauge_increase_rate": 1.0,
+        "gauge_decrease_rate": 1.5,
+        "final_confirmation_time": 5.0
+    },
+    "system": {
+        "led_enabled": true,
+        "voice_enabled": true,
+        "camera_device": 0
+    },
+    "hardware": {
+        "ir_tx_device": "/dev/lirc0",
+        "ir_rx_device": "/dev/lirc1",
+        "led_pins": {
+            "green": 22,
+            "yellow": 23,
+            "red": 24
+        }
+    },
+    "notes": {
+        "blink_threshold": "目が閉じていると判定する閾値 (0.0-1.0, 推奨: 0.4-0.6)",
+        "gauge_max": "睡眠ゲージの最大値（秒数相当、推奨: 3.0-7.0）",
+        "gauge_increase_rate": "ゲージ増加速度（ポイント/秒、推奨: 0.8-1.5）",
+        "gauge_decrease_rate": "ゲージ減少速度（ポイント/秒、推奨: 1.0-2.0）",
+        "final_confirmation_time": "Stage1からStage2までの待機時間（秒、推奨: 3.0-10.0）"
+    }
+}

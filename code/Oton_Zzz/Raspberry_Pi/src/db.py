@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 class DatabaseManager:
     """データベース管理クラス"""
 
-    def __init__(self, db_path='oton_zzz.db'):
+    def __init__(self, db_path='data/oton_zzz.db'):
         """
         初期化
 
@@ -113,6 +113,40 @@ class DatabaseManager:
             'estimated_saved_hours': estimated_saved_hours,
             'estimated_saved_money': round(estimated_saved_money, 2)
         }
+
+    def get_daily_stats(self, days=7):
+        """
+        過去N日間の日別統計を取得
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        stats = []
+        today = datetime.now().date()
+
+        for i in range(days):
+            target_date = today - timedelta(days=i)
+            date_str = target_date.isoformat()
+            next_date_str = (target_date + timedelta(days=1)).isoformat()
+
+            cursor.execute('''
+            SELECT COUNT(*), SUM(duration) FROM logs
+            WHERE event_type = 'SLEEP_DETECTED'
+            AND timestamp >= ? AND timestamp < ?
+            ''', (date_str, next_date_str))
+
+            result = cursor.fetchone()
+            count = result[0] if result[0] else 0
+            duration = result[1] if result[1] else 0
+
+            stats.append({
+                'date': target_date.strftime('%m/%d'),
+                'count': count,
+                'duration': duration
+            })
+
+        conn.close()
+        return list(reversed(stats))
 
     def get_recent_logs(self, limit=10):
         """最新のログを取得"""
