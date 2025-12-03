@@ -9,6 +9,9 @@ import os
 import tempfile
 import random
 import threading
+import wave
+import array
+import time
 
 
 class VoiceController:
@@ -28,6 +31,9 @@ class VoiceController:
         # OpenJTalkのパス確認
         self.check_openjtalk()
 
+        # オーディオデバイスをウェイクアップ（音声途切れ防止）
+        self._wakeup_audio_device()
+
     def check_openjtalk(self):
         """OpenJTalkがインストールされているか確認"""
         try:
@@ -39,7 +45,74 @@ class VoiceController:
                           "以下のコマンドでインストールしてください:\n"
                           "sudo apt install open-jtalk open-jtalk-mecab-naist-jdic hts-voice-nitech-jp-atr503-m001")
 
-    def speak(self, text, speed=1.0):
+    def _wakeup_audio_device(self):
+        """
+        オーディオデバイスをウェイクアップ（音声途切れ防止）
+        短い無音を2回再生してデバイスを完全に起動状態にする
+        """
+        try:
+            # 0.5秒の無音WAVファイルを作成
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
+                silence_path = f.name
+
+            # 無音WAVファイルを生成（0.5秒、16kHz、モノラル）
+            with wave.open(silence_path, 'w') as wav_file:
+                wav_file.setnchannels(1)  # モノラル
+                wav_file.setsampwidth(2)  # 16bit
+                wav_file.setframerate(16000)  # 16kHz
+                # 0.5秒分の無音（8000サンプル）
+                silence = array.array('h', [0] * 8000)
+                wav_file.writeframes(silence.tobytes())
+
+            # 無音を2回再生してデバイスをウェイクアップ
+            for i in range(2):
+                subprocess.run(['aplay', '-D', 'plughw:0,0', '-q', silence_path],
+                             capture_output=True, timeout=2)
+                time.sleep(0.2)
+
+            os.unlink(silence_path)
+            print("✓ オーディオデバイスをウェイクアップしました")
+
+        except Exception as e:
+            # ウェイクアップ失敗は警告のみ（致命的ではない）
+            print(f"⚠️  オーディオデバイスのウェイクアップに失敗: {e}")
+
+    def _prepend_silence_to_wav(self, wav_path, silence_duration=3.0):
+        """
+        WAVファイルの先頭に無音を追加（音声途切れ防止）
+
+        Args:
+            wav_path: WAVファイルのパス
+            silence_duration: 追加する無音の長さ（秒）
+        """
+        try:
+            # 元のWAVファイルを読み込み
+            with wave.open(wav_path, 'rb') as original:
+                params = original.getparams()
+                frames = original.readframes(original.getnframes())
+
+            # 一時ファイルに無音+元の音声を書き込み
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                temp_path = temp_file.name
+
+            with wave.open(temp_path, 'wb') as new_wav:
+                new_wav.setparams(params)
+
+                # 無音を生成
+                silence_samples = int(params.framerate * silence_duration)
+                silence = array.array('h', [0] * silence_samples * params.nchannels)
+                new_wav.writeframes(silence.tobytes())
+
+                # 元の音声を追加
+                new_wav.writeframes(frames)
+
+            # 元のファイルを置き換え
+            os.replace(temp_path, wav_path)
+
+        except Exception as e:
+            print(f"⚠️  WAVファイルへの無音追加に失敗: {e}")
+
+    def speak(self, text, speed=1.5):
         """
         テキストを音声で読み上げ（非同期）
 
@@ -49,6 +122,24 @@ class VoiceController:
         """
         # 既に再生中の場合は、新しいスレッドで再生（排他制御は_speak_thread内で行う）
         threading.Thread(target=self._speak_thread, args=(text, speed), daemon=True).start()
+
+    def speak_sync(self, text, speed=1.5):
+        """
+        テキストを音声で読み上げ（同期版：再生完了まで待機）
+
+        Args:
+            text: 読み上げるテキスト（日本語）
+            speed: 読み上げ速度
+        """
+        # 非同期で開始
+        self.speak(text, speed)
+
+        # 再生が開始されるまで少し待つ
+        time.sleep(0.1)
+
+        # 再生が完了するまで待機
+        while self._is_speaking:
+            time.sleep(0.05)
 
     def _speak_thread(self, text, speed):
         """音声合成・再生の実処理（別スレッドで実行）"""
@@ -85,6 +176,9 @@ class VoiceController:
 
                 subprocess.run(cmd, check=True, capture_output=True)
 
+                # WAVファイルの先頭に無音を追加（音声途切れ防止）
+                self._prepend_silence_to_wav(wav_path)
+
                 # WAVファイルを再生
                 self._play_audio(wav_path)
 
@@ -111,7 +205,17 @@ class VoiceController:
 
             # aplayで再生
             # HDMI0に出力 (plughw:0,0)
-            subprocess.run(['aplay', '-D', 'plughw:0,0', '-q', wav_path], check=True)
+            # デバイス準備のため短い待機
+            time.sleep(0.1)
+
+            # バッファサイズを指定して途切れを防止
+            subprocess.run([
+                'aplay',
+                '-D', 'plughw:0,0',
+                '--buffer-size=8192',  # バッファサイズを増加
+                '-q',
+                wav_path
+            ], check=True)
 
         except subprocess.CalledProcessError:
             print("✗ オーディオ再生に失敗しました")

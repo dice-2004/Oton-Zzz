@@ -1,0 +1,13 @@
+🟢 システム状態: ACTIVE（睡眠検出開始）
+💡 LED: 緑点灯（電源ON）
+🔊 音声: 「オン」
+📝 ログ記録: TV_ON (0s) - リモコン操作
+[Wed Dec  3 09:02:13 2025] ⚠️  STAGE 1 DETECTED! 5秒後にOFF
+💡 LED: 緑・赤点滅（警告）
+🔊 音声: 「警告、5秒後にオフ」
+/home/hxs_jphacks/Oton-Zzz/.venv/lib/python3.12/site-packages/google/protobuf/symbol_database.py:55: UserWarning: SymbolDatabase.GetPrototype() is deprecated. Please use message_factory.GetMessageClass() instead. SymbolDatabase.GetPrototype() will be removed soon.
+  warnings.warn('SymbolDatabase.GetPrototype() is deprecated. Please '
+[Wed Dec  3 09:02:20 2025] 👀 ユーザーが起きました。通知をリセットします。
+🔊 音声: 「はいはい、起きてますね。キャンセルしました。」
+/home/hxs_jphacks/Oton-Zzz/.venv/lib/python3.12/site-packages/google/protobuf/symbol_database.py:55: UserWarning: SymbolDatabase.GetPrototype() is deprecated. Please use message_factory.GetMessageClass() instead. SymbolDatabase.GetPrototype() will be removed soon.
+

@@ -12,7 +12,7 @@ from datetime import datetime
 class TVStateManager:
     """テレビ状態管理クラス"""
 
-    def __init__(self, state_file='tv_state.json'):
+    def __init__(self, state_file='data/tv_state.json'):
         """
         初期化
 

@@ -1,4 +1,4 @@
-# Oton-Zzz IR Remote Sleep Detector セットアップガイド (ir-ctl版)
+# Oton-Zzz IR Remote Sleep Detector セットアップガイド
 
 ## 概要
 このシステムは、ラズベリーパイ5で**ir-ctlコマンド**とMediaPipeを使用した睡眠検出システムです。
@@ -75,8 +75,8 @@ source .venv/bin/activate
 ### 5. プログラムの実行
 
 ```bash
-cd /home/hxs_jphacks/Oton-Zzz/code/Oton_Zzz/python
-python3 ir_sleep_detector.py
+cd /home/hxs_jphacks/Oton-Zzz/code/Oton_Zzz/Raspberry_Pi
+python3 main.py
 ```
 
 ## 初回起動時の動作
@@ -108,7 +108,7 @@ python3 ir_sleep_detector.py
    フォーマット: NEC (または 生データ)
    ```
 
-4. 登録された信号は `ir_codes.json` ファイルに保存され、次回起動時から登録作業は不要になります
+4. 登録された信号は `config/ir_codes.json` ファイルに保存され、次回起動時から登録作業は不要になります
 
 ## 動作フロー
 
@@ -116,11 +116,11 @@ python3 ir_sleep_detector.py
 - 目を閉じた状態が約4秒続くと検出
 - コンソールに警告メッセージを表示：
   ```
-  [日時] ⚠️  STAGE 1 DETECTED! 睡眠の可能性...
+  [日時] ⚠️  STAGE 1 DETECTED! 5秒後にOFF
   ```
 
 ### Stage 2: 睡眠確定 → IR信号送信
-- Stage1から3秒間目を閉じ続けた場合に確定
+- Stage1から5秒間目を閉じ続けた場合に確定
 - 自動的にテレビのIR信号を送信（GPIO17から）
 - コンソールに送信完了メッセージを表示：
   ```
@@ -134,27 +134,6 @@ python3 ir_sleep_detector.py
   ```
   [日時] 👀 ユーザーが起きました。通知をリセットします。
   ```
-
-## 画面表示内容
-
-プログラム実行中、OpenCVウィンドウに以下の情報が表示されます：
-
-- **Status**: 現在の状態
-  - `Eyes Open`: 目を開けている
-  - `Eyes Closed`: 目を閉じている
-  - `Final Confirmation (X.Xs)`: Stage1確定、Stage2まであとX秒
-  - `Confirmed Sleep (Stage 2)`: Stage2確定
-  - `No Face`: 顔が検出されない
-
-- **Sleep Gauge**: 睡眠ゲージ（0.0〜4.0）
-- **睡眠ゲージバー**: 視覚的なゲージ表示
-- **Stage 1 Signal**: Stage1通知の状態（Ready / Sent）
-- **Stage 2 Signal**: Stage2通知の状態（Waiting / Sent）
-- **IR**: IR信号送信の状態（IR: Ready / IR: SENT）
-
-## 終了方法
-
-キーボードの **Q** キーを押すか、**Ctrl+C** で終了できます。
 
 ## トラブルシューティング
 
@@ -183,18 +162,6 @@ python3 ir_sleep_detector.py
 3. リモコンの電池残量を確認
 4. 別のボタンを試す（電源ボタンなど）
 
-**デバッグ方法**:
-```bash
-# 手動でIR受信をテスト
-ir-ctl -d /dev/lirc0 -r -1
-
-# リモコンボタンを押すと、以下のような出力が表示されるはず：
-# pulse 9000
-# space 4500
-# pulse 560
-# ...
-```
-
 ### IR信号が送信されない
 
 **原因**:
@@ -205,80 +172,25 @@ ir-ctl -d /dev/lirc0 -r -1
 **解決策**:
 1. IR送信機の配線を確認（GPIO17、GND、VCC）
 2. IR LEDの極性を確認（長い方が+）
-3. `ir_codes.json` を削除して再登録:
+3. `config/ir_codes.json` を削除して再登録:
    ```bash
-   rm ir_codes.json
-   python3 ir_sleep_detector.py
+   rm config/ir_codes.json
+   python3 main.py
    ```
-
-**手動テスト（NECフォーマットの場合）**:
-```bash
-# 手動でNECコードを送信してテスト
-ir-ctl -d /dev/lirc0 -S nec:0x20df10ef
-
-# または生データを送信
-ir-ctl -d /dev/lirc0 --send=ir_test.txt
-```
-
-### カメラが開けない場合
-
-**原因**: カメラが使用中、または接続されていません
-
-**解決策**:
-```bash
-# カメラデバイスを確認
-ls /dev/video*
-
-# 他のアプリケーションでカメラが使用されていないか確認
-sudo lsof /dev/video0
-
-# カメラの権限確認
-groups $USER
-# 'video' グループに所属していない場合は追加
-sudo usermod -a -G video $USER
-```
 
 ## ファイル構成
 
 ```
-/home/hxs_jphacks/Oton-Zzz/code/Oton_Zzz/python/
-├── ir_sleep_detector.py              # メインスクリプト (ir-ctl版)
-├── main.py                           # オリジナルの睡眠検出スクリプト
-├── ir_codes.json                     # IR信号データ（自動生成）
-├── face_landmarker_v2_with_blendshapes.task  # MediaPipeモデル
-└── IR_SETUP_README.md                # このファイル
-```
-
-## パラメータ調整
-
-`ir_sleep_detector.py` の以下の部分で動作を調整できます：
-
-```python
-detector = SleepDetector(
-    gauge_max=4.0,                # Stage1までの時間（秒）※目を閉じ続ける時間
-    gauge_decrease_rate=1.5,      # 目を開けたときのゲージ減少速度
-    final_confirmation_time=3.0   # Stage1→Stage2の待機時間（秒）
-)
-```
-
-**例**: より早く反応させたい場合
-```python
-detector = SleepDetector(
-    gauge_max=2.0,                # 2秒で Stage1
-    final_confirmation_time=2.0   # さらに2秒で Stage2
-)
-```
-
-## 再登録方法
-
-リモコン信号を登録し直したい場合：
-
-```bash
-# ir_codes.jsonを削除
-rm ir_codes.json
-
-# プログラムを再実行すると、再度登録プロセスが開始されます
-python3 ir_sleep_detector.py
+/home/hxs_jphacks/Oton-Zzz/code/Oton_Zzz/Raspberry_Pi/
+├── main.py                           # メインスクリプト
+├── src/                              # ソースコードディレクトリ
+│   ├── core.py                       # コアロジック
+│   ├── detector.py                   # 睡眠検出
+│   └── ...
+├── config/
+│   └── ir_codes.json                 # IR信号データ（自動生成）
+├── docs/                             # ドキュメント
+└── ...
 ```
 
 ## 技術詳細
@@ -298,31 +210,3 @@ python3 ir_sleep_detector.py
 3. **カーネルドライバ**: `gpio-ir-tx` / `gpio-ir-rx`
    - 38kHzの搬送波生成はハードウェアで処理
    - Pythonでは波形を制御するだけなので安定動作
-
-### LIRCサービスとの違い
-
-- **LIRCサービス不要**: `lircd` デーモンを起動する必要なし
-- **設定ファイル不要**: `lircd.conf` などの複雑な設定ファイルを作成する必要なし
-- **シンプル**: Pythonから`subprocess`で`ir-ctl`を叩くだけ
-
-## 複数デバイスの登録（今後の拡張）
-
-現在はテレビのみですが、コードを修正することで複数デバイスに対応可能です。
-
-例: エアコンと照明を追加
-```python
-# リモコン登録
-ir_controller.record_ir_signal("AC", num_samples=3)
-ir_controller.record_ir_signal("LIGHT", num_samples=3)
-
-# Stage2で一斉送信
-ir_controller.send_ir_signal("TV")
-ir_controller.send_ir_signal("AC")
-ir_controller.send_ir_signal("LIGHT")
-```
-
-## 参考リンク
-
-- [ir-ctl マニュアル](https://www.mankier.com/1/ir-ctl)
-- [Linux Infrared Remote Control (LIRC)](https://www.lirc.org/)
-- [Raspberry Pi IR GPIO設定](https://www.raspberrypi.com/documentation/computers/configuration.html#gpio-infrared)

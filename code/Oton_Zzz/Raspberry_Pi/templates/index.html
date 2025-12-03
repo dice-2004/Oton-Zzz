@@ -15,6 +15,9 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/png">
+
     <style>
         :root {
             /* Colors extracted from the logo image */
@@ -123,7 +126,7 @@
 
         /* Stats */
         .stat-value {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 800;
             margin: 10px 0;
             color: var(--brand-text);
@@ -136,14 +139,14 @@
         }
 
         .stat-icon-circle {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
-            margin: 0 auto 15px;
+            font-size: 1.5rem;
+            margin: 0 auto 10px;
             color: white;
         }
 
@@ -172,13 +175,15 @@
             border-bottom: 2px solid var(--brand-blue);
             color: var(--brand-blue);
             font-weight: 700;
+            font-size: 0.9rem;
         }
 
         .table td {
             border-bottom: 1px solid #eee;
             vertical-align: middle;
             font-weight: 500;
-            padding: 15px 10px;
+            padding: 12px 10px;
+            font-size: 0.95rem;
         }
 
         /* Badges */
@@ -207,7 +212,14 @@
         /* Chart */
         .chart-container {
             position: relative;
-            height: 300px;
+            height: 250px;
+            width: 100%;
+        }
+
+        .chart-container-sm {
+            position: relative;
+            height: 200px;
+            width: 100%;
         }
     </style>
 </head>
@@ -229,60 +241,52 @@
 
     <div class="container pb-5">
         <!-- Stats Row -->
-        <div class="row g-4 mb-5">
+        <div class="row g-4 mb-4">
             <!-- Sleep Count -->
-            <div class="col-md-3">
-                <div class="brand-card text-center h-100">
-                    <i class="bi bi-flower1 leaf-deco"></i>
-                    <div class="stat-icon-circle bg-blue">
+            <div class="col-md-6">
+                <div class="brand-card text-center h-100 p-4">
+                    <i class="bi bi-flower1 leaf-deco" style="font-size: 4rem;"></i>
+                    <div class="stat-icon-circle bg-blue" style="width: 70px; height: 70px; font-size: 2rem;">
                         <i class="bi bi-moon-stars-fill"></i>
                     </div>
-                    <div class="stat-value">{{ stats.sleep_count }}</div>
-                    <div class="stat-label">おやすみ回数</div>
-                </div>
-            </div>
-
-            <!-- Wasted Time -->
-            <div class="col-md-3">
-                <div class="brand-card text-center h-100">
-                    <div class="stat-icon-circle bg-green">
-                        <i class="bi bi-stopwatch-fill"></i>
-                    </div>
-                    <div class="stat-value">{{ stats.wasted_seconds }}</div>
-                    <div class="stat-label">つけっぱなし時間 (秒)</div>
+                    <div class="stat-value" style="font-size: 3.5rem;">{{ stats.sleep_count }}<span
+                            class="fs-4 ms-2">回</span></div>
+                    <div class="stat-label fs-5">今週のおやすみ</div>
                 </div>
             </div>
 
             <!-- Saved Money -->
-            <div class="col-md-3">
-                <div class="brand-card text-center h-100">
-                    <div class="stat-icon-circle bg-yellow">
+            <div class="col-md-6">
+                <div class="brand-card text-center h-100 p-4">
+                    <div class="stat-icon-circle bg-yellow" style="width: 70px; height: 70px; font-size: 2rem;">
                         <i class="bi bi-piggy-bank-fill"></i>
                     </div>
-                    <div class="stat-value">¥{{ stats.estimated_saved_money }}</div>
-                    <div class="stat-label">節約できたお金</div>
-                </div>
-            </div>
-
-            <!-- Wasted Money -->
-            <div class="col-md-3">
-                <div class="brand-card text-center h-100">
-                    <div class="stat-icon-circle bg-red">
-                        <i class="bi bi-lightning-charge-fill"></i>
+                    <div class="stat-value" style="font-size: 3.5rem;">¥{{ stats.estimated_saved_money|int }}</div>
+                    <div class="stat-label fs-5">節約できた電気代</div>
+                    <div class="mt-2 text-secondary small">
+                        <i class="bi bi-info-circle me-1"></i>朝まで(4時間)つけっぱなしだった場合と比較
                     </div>
-                    <div class="stat-value">¥{{ stats.wasted_money }}</div>
-                    <div class="stat-label">かかってしまった電気代</div>
                 </div>
             </div>
         </div>
 
         <!-- Content Row -->
         <div class="row g-4">
+            <!-- Weekly Trend Chart -->
+            <div class="col-lg-12">
+                <div class="brand-card mb-4">
+                    <h5 class="mb-4"><i class="bi bi-graph-up me-2"></i>週間睡眠レポート</h5>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
             <!-- Recent Logs -->
-            <div class="col-lg-8">
+            <div class="col-lg-12">
                 <div class="brand-card h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4><i class="bi bi-journal-text me-2"></i>活動記録</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="bi bi-journal-text me-2"></i>活動記録</h5>
                         <span class="badge bg-light text-secondary rounded-pill">最新20件</span>
                     </div>
                     <div class="table-responsive">
@@ -291,13 +295,17 @@
                                 <tr>
                                     <th>時間</th>
                                     <th>できごと</th>
-                                    <th>メモ</th>
+                                    <th>詳細</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for log in logs %}
                                 <tr>
-                                    <td class="text-secondary">{{ log.timestamp.split('.')[0].replace('T', ' ') }}</td>
+                                    <td class="text-secondary" style="white-space: nowrap;">
+                                        {% set dt = log.timestamp | to_jst %}
+                                        {{ dt.strftime('%m/%d') }}
+                                        <small class="d-block">{{ dt.strftime('%H:%M') }}</small>
+                                    </td>
                                     <td>
                                         {% if log.event_type == 'SLEEP_DETECTED' %}
                                         <span class="badge-brand badge-sleep">
@@ -316,29 +324,15 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {{ log.note }}
+                                        <div class="small">{{ log.note }}</div>
                                         {% if log.duration > 0 %}
-                                        <span class="ms-2 fw-bold text-primary">({{ log.duration }}秒)</span>
+                                        <div class="fw-bold text-primary small">({{ log.duration|int }}秒)</div>
                                         {% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chart -->
-            <div class="col-lg-4">
-                <div class="brand-card h-100">
-                    <h4 class="mb-4 text-center">節約効果</h4>
-                    <div class="chart-container">
-                        <canvas id="savingsChart"></canvas>
-                    </div>
-                    <div class="mt-4 text-center small text-secondary">
-                        <i class="bi bi-info-circle-fill me-1"></i>
-                        4時間のつけっぱなしを防止した場合の試算
                     </div>
                 </div>
             </div>
@@ -350,42 +344,49 @@
         Chart.defaults.font.family = "'M PLUS Rounded 1c', sans-serif";
         Chart.defaults.color = '#4a4a4a';
 
-        const ctx = document.getElementById('savingsChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'doughnut',
+        // Weekly Trend Chart (Bar)
+        const ctxWeekly = document.getElementById('weeklyChart').getContext('2d');
+        const dailyData = {{ daily_stats| tojson }};
+
+        new Chart(ctxWeekly, {
+            type: 'bar',
             data: {
-                labels: ['節約できた', '無駄になった'],
+                labels: dailyData.map(d => d.date),
                 datasets: [{
-                    data: [{{ stats.estimated_saved_money }}, {{ stats.wasted_money }}],
-            backgroundColor: [
-                '#9ccb5b',  // Brand Green
-                '#ff8a80'   // Soft Red
-            ],
-            borderColor: '#ffffff',
-            borderWidth: 4,
-            hoverOffset: 10
-        }]
-        },
+                    label: '寝落ち回数',
+                    data: dailyData.map(d => d.count),
+                    backgroundColor: '#5ba4cf',
+                    borderRadius: 8,
+                    barThickness: 30,
+                }]
+            },
             options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '65%',
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 20,
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        font: {
-                            size: 12,
-                            weight: 'bold'
-                        }
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(91, 164, 207, 0.9)',
+                        padding: 10,
+                        cornerRadius: 10,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: { size: 14 }
+                        },
+                        grid: { borderDash: [2, 2] }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 14 } }
                     }
                 }
             }
-        }
-    });
+        });
     </script>
 
 </body>

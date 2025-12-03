@@ -20,7 +20,7 @@ sys.path.append(os.path.dirname(__file__))
 class IRController:
     """赤外線送受信を管理するクラス (ir-ctl版)"""
 
-    def __init__(self, tx_device='/dev/lirc0', rx_device='/dev/lirc1', config_file='ir_codes.json'):
+    def __init__(self, tx_device='/dev/lirc0', rx_device='/dev/lirc1', config_file='config/ir_codes.json'):
         """
         初期化
 
@@ -357,7 +357,7 @@ class SleepDetector:
         gauge_increase_rate=1.0,
         gauge_decrease_rate=1.5,
         final_confirmation_time=3.0,
-        model_path='./face_landmarker_v2_with_blendshapes.task'
+        model_path='models/face_landmarker_v2_with_blendshapes.task'
     ):
         """
         初期化
@@ -386,6 +386,12 @@ class SleepDetector:
 
         # --- MediaPipe結果保存用 ---
         self.latest_result = None
+
+    def reset(self):
+        """状態をリセット"""
+        self.sleep_gauge = 0.0
+        self.final_confirmation_start_time = None
+        self.last_update_time = time.time()
 
     def result_callback(self, result: mp.tasks.vision.FaceLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
         self.latest_result = result

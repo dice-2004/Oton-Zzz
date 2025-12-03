@@ -12,14 +12,23 @@ import mediapipe as mp
 import sys
 import os
 
+# srcディレクトリをパスに追加（モジュールインポート用）
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# カレントディレクトリをプロジェクトルートに設定
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(project_root)
+
 # 新しいモジュールをインポート
-from led_controller import LEDController
-from voice_controller import VoiceController
-from tv_state_manager import TVStateManager
-from ir_sleep_detector import IRController, SleepDetector
-from ir_monitor import IRMonitor
-from system_state_manager import SystemStateManager
-from database_manager import DatabaseManager  # NEW, SystemState
+# 新しいモジュールをインポート
+from led import LEDController
+from voice import VoiceController
+from tv_state import TVStateManager
+from detector import IRController, SleepDetector
+from ir_rx import IRMonitor
+from state import SystemStateManager
+from db import DatabaseManager
+from config import ConfigManager
 
 
 def main():
@@ -34,7 +43,7 @@ def main():
     # LED初期化（エラーでも続行）
     try:
         print("🔆 LEDコントローラーを初期化しています...")
-        led = LEDController(green_pin=22, yellow_pin=23, red_pin=24)
+        led = LEDController()  # 新しいバージョンはピン指定不要（内部で22,23を使用）
         led_enabled = True
     except Exception as e:
         print(f"⚠️  LED初期化をスキップしました: {e}")
@@ -52,6 +61,11 @@ def main():
     # システム状態管理
     print("🔄 システム状態管理を初期化しています...")
     system_state = SystemStateManager()
+
+    # 設定ファイルを読み込み
+    print("⚙️  設定ファイルを読み込んでいます...")
+    config_mgr = ConfigManager()
+    sleep_params = config_mgr.get_sleep_detection_params()
 
     # データベース管理
     print("📝 データベース管理を初期化しています...")
@@ -97,12 +111,20 @@ def main():
     print("Oton-Zzzシステムを開始します...")
     print("="*60 + "\n")
 
-    # 睡眠検出器の初期化
+    # 睡眠検出器の初期化（設定ファイルから読み込み）
     detector = SleepDetector(
-        gauge_max=5.0,                # ゲージが5.0に達したらStage1（5秒）
-        gauge_decrease_rate=1.5,      # 減少速度を1.5倍に設定
-        final_confirmation_time=5.0   # Stage1から5秒後にStage2へ（発表会用：合計10秒）
+        blink_threshold=sleep_params.get('blink_threshold', 0.5),
+        gauge_max=sleep_params.get('gauge_max', 5.0),
+        gauge_increase_rate=sleep_params.get('gauge_increase_rate', 1.0),
+        gauge_decrease_rate=sleep_params.get('gauge_decrease_rate', 1.5),
+        final_confirmation_time=sleep_params.get('final_confirmation_time', 5.0)
     )
+
+    print(f"  - まばたき閾値: {detector.BLINK_THRESHOLD}")
+    print(f"  - ゲージ最大値: {detector.GAUGE_MAX}")
+    print(f"  - 増加速度: {detector.GAUGE_INCREASE_RATE}")
+    print(f"  - 減少速度: {detector.GAUGE_DECREASE_RATE}")
+    print(f"  - 最終確認時間: {detector.FINAL_CONFIRMATION_TIME}秒")
 
     # 音声再生中フラグ（MediaPipe処理スキップ用）
     voice._is_speaking = False
@@ -134,17 +156,18 @@ def main():
     notified_stage1 = False
     warning_spoken = False
     notified_stage2 = False
+    skip_detection_until = 0  # テレビON後の検出スキップ期間
 
     try:
         with FaceLandmarker.create_from_options(options) as landmarker:
-            voice.speak("おとんずずず、起動しました。")
+            voice.speak("起動")  # 短いカタカナ
 
             # 初期状態に応じたLED
             if led_enabled:
                 if system_state.is_active():
-                    led.set_normal()  # 緑LED
+                    led.power_on()  # 緑LED
                 else:
-                    led.all_off()  # SLEEP時はLED消灯
+                    led.power_off()  # SLEEP時は赤LED
 
             print("✓ Oton-Zzzシステムが起動しました")
             print("  - Qキーで終了")
@@ -153,6 +176,8 @@ def main():
             start_time = time.time()
 
             while True:
+                current_time = time.time()
+
                 # リモコン信号チェック
                 ir_signal = ir_monitor.has_signal()
                 if ir_signal:
@@ -162,38 +187,57 @@ def main():
                     if tv_is_on:
                         # テレビON → システムACTIVE
                         system_state.set_active()
-                        if led_enabled:
-                            led.set_normal()
-                        voice.speak("テレビがつきました。睡眠検出を開始します。")
-                        db_manager.log_event('TV_ON', note="リモコン操作")  # LOG
 
                         # 通知フラグをリセット
                         notified_stage1 = False
                         warning_spoken = False
                         notified_stage2 = False
-                        detector.sleep_gauge = 0.0
-                        detector.final_confirmation_start_time = None
+                        detector.reset()
+
+                        # テレビON後5秒間は検出をスキップ（警告誤検知防止）
+                        skip_detection_until = current_time + 5.0
+
+                        # LED設定を最後に（確実に緑LEDにする）
+                        if led_enabled:
+                            led.power_on()
+
+                        voice.speak("オン")  # 短いカタカナ
+                        db_manager.log_event('TV_ON', note="リモコン操作")  # LOG
 
                     else:
                         # テレビOFF → システムSLEEP
                         system_state.set_sleep()
-                        if led_enabled:
-                            led.all_off()
-                        voice.speak("テレビが消されました。待機モードに入ります。")
-                        db_manager.log_event('TV_OFF', note="リモコン操作")  # LOG
 
                         # 通知フラグをリセット
                         notified_stage1 = False
                         warning_spoken = False
                         notified_stage2 = False
-                        detector.sleep_gauge = 0.0
-                        detector.final_confirmation_start_time = None
+                        detector.reset()
+
+                        # LED設定
+                        if led_enabled:
+                            led.power_off()
+
+                        voice.speak("オフ")  # 短いカタカナ
+                        db_manager.log_event('TV_OFF', note="リモコン操作")  # LOG
 
                 # ACTIVE状態の場合のみ睡眠検出を実行
                 if system_state.is_active():
                     ret, frame = cap.read()
                     if not ret:
                         break
+
+                    # テレビON後のスキップ期間中は検出をスキップ
+                    if current_time < skip_detection_until:
+                        frame = cv2.flip(frame, 1)
+                        remaining = int(skip_detection_until - current_time)
+                        cv2.putText(frame, f"Waiting... {remaining}s", (10, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                        cv2.imshow("Oton-Zzz Phase 1 (TV Sync)", frame)
+                        if cv2.waitKey(1) & 0xFF == ord('q'):
+                            break
+                        # スキップ期間中はlast_update_timeを更新して、終了後のdelta_time急増を防ぐ
+                        detector.last_update_time = time.time()
+                        continue
 
                     # 音声再生中は画像処理をスキップ（バッファ蓄積防止）
                     if voice._is_speaking:
@@ -203,6 +247,8 @@ def main():
                         cv2.imshow("Oton-Zzz Phase 1 (TV Sync)", frame)
                         if cv2.waitKey(1) & 0xFF == ord('q'):
                             break
+                        # 音声再生中もlast_update_timeを更新
+                        detector.last_update_time = time.time()
                         continue
 
                     frame = cv2.flip(frame, 1)
@@ -217,9 +263,9 @@ def main():
                     if is_stage1 and not notified_stage1:
                         print(f"[{time.ctime()}] ⚠️  STAGE 1 DETECTED! 5秒後にOFF")
                         if led_enabled:
-                            led.set_warning()  # 黄LED点滅
+                            led.warning()  # 黄LED点滅
                         # 5秒なので簡潔な警告
-                        voice.speak("寝てるね。5秒後にテレビ消すよ。")
+                        voice.speak("警告、5秒後にオフ")  # 短いカタカナ
                         notified_stage1 = True
                         warning_spoken = True
 
@@ -230,7 +276,7 @@ def main():
                             print(f"[{time.ctime()}] 📡 テレビの電源をOFFにします...")
 
                             if led_enabled:
-                                led.set_alert()  # 赤LED
+                                led.power_off()  # 赤LED
                             voice.speak_shutdown()
 
                             # IR監視を一時停止（自分の送信信号を受信しないように）
@@ -253,7 +299,7 @@ def main():
                             # システムをSLEEP状態に
                             system_state.set_sleep()
                             if led_enabled:
-                                led.all_off()
+                                led.power_off()
 
                             notified_stage2 = True
                         else:
@@ -268,7 +314,7 @@ def main():
                             voice.speak_cancel()
 
                         if led_enabled:
-                            led.set_normal()  # 緑LEDに戻す
+                            led.power_on()  # 緑LEDに戻す
                         notified_stage1 = False
                         warning_spoken = False
                         notified_stage2 = False
