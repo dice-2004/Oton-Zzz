@@ -48,7 +48,7 @@ class AutoCalibration:
         print("✓ カメラを起動しました（LEDが緑に点灯）")
 
         # 音声は非同期で再生（処理を止めない）
-        self.voice.speak("起動しました")
+        self.voice.speak('calib_startup')
 
         # 音声再生完了を待つ
         while self.voice._is_speaking:
@@ -134,8 +134,12 @@ class AutoCalibration:
 
                     # 10秒ごとに進捗を音声通知（非同期）
                     if elapsed - last_voice_time >= 10.0:
-                        remaining = duration_seconds - elapsed
-                        self.voice.speak(f"あと{int(remaining)}秒")
+                        remaining = int(duration_seconds - elapsed)
+                        # 事前生成された音声ファイルを使用
+                        if remaining == 20:
+                            self.voice.speak('calib_remaining_20')
+                        elif remaining == 10:
+                            self.voice.speak('calib_remaining_10')
                         last_voice_time = elapsed
 
                     # ========== OpenCVディスプレイ表示（情報表示のみ） ==========
@@ -179,14 +183,14 @@ class AutoCalibration:
                     time.sleep(0.05)
 
         except KeyboardInterrupt:
-            self.voice.speak("中断しました")
+            self.voice.speak('error')
             return []
 
         return blink_scores
 
     def run_auto_calibration(self):
         """完全自動キャリブレーションフロー"""
-        self.voice.speak("開始します")
+        self.voice.speak('calib_start')
 
         # 音声完了を待つ
         while self.voice._is_speaking:
@@ -194,7 +198,7 @@ class AutoCalibration:
         time.sleep(2)
 
         # ステップ1: 普通にテレビを見ている状態で測定（30秒）
-        self.voice.speak("ステップ1")
+        self.voice.speak('calib_step1')
 
         # 音声完了を待つ
         while self.voice._is_speaking:
@@ -204,12 +208,12 @@ class AutoCalibration:
         blink_scores_normal = self.run_test(duration_seconds=30, test_name="Step 1: Normal Viewing")
 
         if not blink_scores_normal:
-            self.voice.speak("失敗しました")
+            self.voice.speak('error')
             return
 
         avg_normal = sum(blink_scores_normal) / len(blink_scores_normal)
         print(f"\nステップ1完了: まばたきスコア平均 = {avg_normal:.3f}")
-        self.voice.speak("完了")
+        self.voice.speak('calib_step1_done')
 
         # 音声完了を待つ
         while self.voice._is_speaking:
@@ -217,7 +221,7 @@ class AutoCalibration:
         time.sleep(2)
 
         # ステップ2: 目を閉じた状態で測定（10秒）
-        self.voice.speak("ステップ2")
+        self.voice.speak('calib_step2')
 
         # 音声完了を待つ
         while self.voice._is_speaking:
@@ -227,12 +231,12 @@ class AutoCalibration:
         blink_scores_closed = self.run_test(duration_seconds=10, test_name="Step 2: Eyes Closed")
 
         if not blink_scores_closed:
-            self.voice.speak("測定に失敗しました。ステップ1の結果のみで設定します")
+            self.voice.speak('error')
             avg_closed = 1.0  # デフォルト値
         else:
             avg_closed = sum(blink_scores_closed) / len(blink_scores_closed)
             print(f"\nステップ2完了: まばたきスコア平均 = {avg_closed:.3f}")
-            self.voice.speak("完了")
+            self.voice.speak('calib_step2_done')
 
         # 音声完了を待つ
         while self.voice._is_speaking:
@@ -259,7 +263,7 @@ class AutoCalibration:
         print(f"\n現在の閾値: {current_threshold:.3f}")
         print(f"新しい閾値: {recommended_threshold:.3f}")
 
-        self.voice.speak("設定更新")
+        self.voice.speak('calib_update')
 
         # 音声完了を待つ
         while self.voice._is_speaking:
@@ -268,7 +272,7 @@ class AutoCalibration:
         self.config_mgr.update_sleep_detection_params(blink_threshold=recommended_threshold)
 
         # 設定を保存
-        self.voice.speak("保存します")
+        self.voice.speak('calib_save')
 
         # 音声完了を待つ
         while self.voice._is_speaking:
@@ -277,7 +281,7 @@ class AutoCalibration:
         self.config_mgr.save()
 
         # 完了
-        self.voice.speak("完了しました")
+        self.voice.speak('calib_complete')
 
         # 音声完了を待つ
         while self.voice._is_speaking:

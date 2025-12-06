@@ -160,7 +160,7 @@ def main():
 
     try:
         with FaceLandmarker.create_from_options(options) as landmarker:
-            voice.speak("起動")  # 短いカタカナ
+            voice.speak('startup')
 
             # 初期状態に応じたLED
             if led_enabled:
@@ -201,7 +201,7 @@ def main():
                         if led_enabled:
                             led.power_on()
 
-                        voice.speak("オン")  # 短いカタカナ
+                        voice.speak('tv_on')
                         db_manager.log_event('TV_ON', note="リモコン操作")  # LOG
 
                     else:
@@ -218,7 +218,7 @@ def main():
                         if led_enabled:
                             led.power_off()
 
-                        voice.speak("オフ")  # 短いカタカナ
+                        voice.speak('tv_off')
                         db_manager.log_event('TV_OFF', note="リモコン操作")  # LOG
 
                 # ACTIVE状態の場合のみ睡眠検出を実行
@@ -265,7 +265,7 @@ def main():
                         if led_enabled:
                             led.warning()  # 黄LED点滅
                         # 5秒なので簡潔な警告
-                        voice.speak("警告、5秒後にオフ")  # 短いカタカナ
+                        voice.speak('warning')
                         notified_stage1 = True
                         warning_spoken = True
 

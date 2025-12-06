@@ -1,339 +1,187 @@
 #!/usr/bin/env python3
 """
-音声合成コントローラー (OpenJTalk)
-日本語テキストを音声で読み上げ
+音声コントローラー（事前読み込み版）
+起動時にすべての音声ファイルをメモリに読み込み、高速再生を実現します。
 """
 
-import subprocess
 import os
-import tempfile
-import random
 import threading
-import wave
-import array
 import time
+
+# pygameのウェルカムメッセージを非表示
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+
+import pygame
 
 
 class VoiceController:
-    """音声合成コントローラー"""
+    """音声コントローラー（事前読み込み版）"""
 
-    def __init__(self, bluetooth_device=None):
-        """
-        初期化
+    def __init__(self):
+        """初期化：音声ファイルを事前読み込み"""
+        self._is_speaking = False
+        self._speak_lock = threading.Lock()
 
-        Args:
-            bluetooth_device: Bluetoothスピーカーのデバイス名（Noneの場合はデフォルト出力）
-        """
-        self.bluetooth_device = bluetooth_device
-        self._is_speaking = False  # 音声再生中フラグ
-        self._speak_lock = threading.Lock()  # スレッドセーフ用ロック
+        # 音声ファイルディレクトリ
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.sounds_dir = os.path.join(script_dir, '..', 'assets', 'sounds')
 
-        # OpenJTalkのパス確認
-        self.check_openjtalk()
+        # pygame.mixer初期化
+        pygame.mixer.init(frequency=48000, size=-16, channels=1, buffer=2048)
 
-        # オーディオデバイスをウェイクアップ（音声途切れ防止）
-        self._wakeup_audio_device()
+        # 音声キーとファイル名のマッピング
+        self.sound_mapping = {
+            # メインシステム
+            'startup': 'startup.wav',
+            'tv_on': 'tv_on.wav',
+            'tv_off': 'tv_off.wav',
+            'warning': 'warning.wav',
+            'shutdown': 'shutdown.wav',
+            'cancel': 'cancel.wav',
 
-    def check_openjtalk(self):
-        """OpenJTalkがインストールされているか確認"""
+            # キャリブレーション
+            'calib_startup': 'calib_startup.wav',
+            'calib_start': 'calib_start.wav',
+            'calib_step1': 'calib_step1.wav',
+            'calib_step1_done': 'calib_step1_done.wav',
+            'calib_step2': 'calib_step2.wav',
+            'calib_step2_done': 'calib_step2_done.wav',
+            'calib_remaining_20': 'calib_remaining_20.wav',
+            'calib_remaining_10': 'calib_remaining_10.wav',
+            'calib_update': 'calib_update.wav',
+            'calib_save': 'calib_save.wav',
+            'calib_complete': 'calib_complete.wav',
+
+            # その他
+            'error': 'error.wav',
+            'test': 'test.wav',
+        }
+
+        # 音声ファイルを事前読み込み
+        self.sounds = {}
+        self._load_all_sounds()
+
+        # オーディオデバイスをウェイクアップ（初回再生時の途切れ防止）
+        self._wakeup_audio()
+
+        print("✓ 音声コントローラーを初期化しました（事前読み込み版）")
+
+    def _load_all_sounds(self):
+        """すべての音声ファイルをメモリに読み込む"""
+        print("🔊 音声ファイルを読み込み中...")
+        loaded_count = 0
+
+        for key, filename in self.sound_mapping.items():
+            wav_path = os.path.join(self.sounds_dir, filename)
+            if os.path.exists(wav_path):
+                try:
+                    self.sounds[key] = pygame.mixer.Sound(wav_path)
+                    loaded_count += 1
+                except Exception as e:
+                    print(f"⚠️  {filename} の読み込みに失敗: {e}")
+            else:
+                print(f"⚠️  {filename} が見つかりません")
+
+        print(f"✓ {loaded_count}/{len(self.sound_mapping)}個の音声ファイルを読み込みました")
+
+    def _wakeup_audio(self):
+        """オーディオデバイスをウェイクアップ（短い無音を再生）"""
         try:
-            result = subprocess.run(['which', 'open_jtalk'],
-                                  capture_output=True, text=True, check=True)
-            print(f"✓ OpenJTalkが見つかりました: {result.stdout.strip()}")
-        except subprocess.CalledProcessError:
-            raise Exception("OpenJTalkがインストールされていません。\n"
-                          "以下のコマンドでインストールしてください:\n"
-                          "sudo apt install open-jtalk open-jtalk-mecab-naist-jdic hts-voice-nitech-jp-atr503-m001")
-
-    def _wakeup_audio_device(self):
-        """
-        オーディオデバイスをウェイクアップ（音声途切れ防止）
-        短い無音を2回再生してデバイスを完全に起動状態にする
-        """
-        try:
-            # 0.5秒の無音WAVファイルを作成
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
-                silence_path = f.name
-
-            # 無音WAVファイルを生成（0.5秒、16kHz、モノラル）
-            with wave.open(silence_path, 'w') as wav_file:
-                wav_file.setnchannels(1)  # モノラル
-                wav_file.setsampwidth(2)  # 16bit
-                wav_file.setframerate(16000)  # 16kHz
-                # 0.5秒分の無音（8000サンプル）
-                silence = array.array('h', [0] * 8000)
-                wav_file.writeframes(silence.tobytes())
-
-            # 無音を2回再生してデバイスをウェイクアップ
-            for i in range(2):
-                subprocess.run(['aplay', '-D', 'plughw:0,0', '-q', silence_path],
-                             capture_output=True, timeout=2)
-                time.sleep(0.2)
-
-            os.unlink(silence_path)
-            print("✓ オーディオデバイスをウェイクアップしました")
-
+            # 短い無音サウンドを生成して再生
+            import array
+            # 0.5秒の無音（48kHz, 16bit, mono）
+            silence_samples = int(48000 * 0.5)
+            silence_data = array.array('h', [0] * silence_samples)
+            silence_sound = pygame.mixer.Sound(buffer=silence_data)
+            silence_sound.play()
+            # 再生完了を待つ
+            while pygame.mixer.get_busy():
+                time.sleep(0.05)
+            # デバイスが安定するまで少し待機
+            time.sleep(0.3)
         except Exception as e:
-            # ウェイクアップ失敗は警告のみ（致命的ではない）
-            print(f"⚠️  オーディオデバイスのウェイクアップに失敗: {e}")
+            print(f"⚠️  オーディオウェイクアップに失敗: {e}")
 
-    def _prepend_silence_to_wav(self, wav_path, silence_duration=3.0):
+    def speak(self, key):
         """
-        WAVファイルの先頭に無音を追加（音声途切れ防止）
+        音声を再生（非同期）
 
         Args:
-            wav_path: WAVファイルのパス
-            silence_duration: 追加する無音の長さ（秒）
+            key: 音声キー（例: 'startup', 'warning'）
         """
-        try:
-            # 元のWAVファイルを読み込み
-            with wave.open(wav_path, 'rb') as original:
-                params = original.getparams()
-                frames = original.readframes(original.getnframes())
+        threading.Thread(target=self._speak_thread, args=(key,), daemon=True).start()
 
-            # 一時ファイルに無音+元の音声を書き込み
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-                temp_path = temp_file.name
-
-            with wave.open(temp_path, 'wb') as new_wav:
-                new_wav.setparams(params)
-
-                # 無音を生成
-                silence_samples = int(params.framerate * silence_duration)
-                silence = array.array('h', [0] * silence_samples * params.nchannels)
-                new_wav.writeframes(silence.tobytes())
-
-                # 元の音声を追加
-                new_wav.writeframes(frames)
-
-            # 元のファイルを置き換え
-            os.replace(temp_path, wav_path)
-
-        except Exception as e:
-            print(f"⚠️  WAVファイルへの無音追加に失敗: {e}")
-
-    def speak(self, text, speed=1.5):
+    def speak_sync(self, key):
         """
-        テキストを音声で読み上げ（非同期）
+        音声を再生（同期版：完了まで待機）
 
         Args:
-            text: 読み上げるテキスト（日本語）
-            speed: 読み上げ速度
+            key: 音声キー
         """
-        # 既に再生中の場合は、新しいスレッドで再生（排他制御は_speak_thread内で行う）
-        threading.Thread(target=self._speak_thread, args=(text, speed), daemon=True).start()
-
-    def speak_sync(self, text, speed=1.5):
-        """
-        テキストを音声で読み上げ（同期版：再生完了まで待機）
-
-        Args:
-            text: 読み上げるテキスト（日本語）
-            speed: 読み上げ速度
-        """
-        # 非同期で開始
-        self.speak(text, speed)
-
-        # 再生が開始されるまで少し待つ
+        self.speak(key)
         time.sleep(0.1)
-
-        # 再生が完了するまで待機
         while self._is_speaking:
             time.sleep(0.05)
 
-    def _speak_thread(self, text, speed):
-        """音声合成・再生の実処理（別スレッドで実行）"""
-        # ロックを取得して、重ならないようにする
+    def _speak_thread(self, key):
+        """音声再生の実処理（別スレッド）"""
         with self._speak_lock:
             self._is_speaking = True
-            print(f"🔊 音声: 「{text}」")
 
             try:
-                # 一時ファイルを作成
-                with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as text_file:
-                    text_file.write(text)
-                    text_path = text_file.name
-
-                with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as wav_file:
-                    wav_path = wav_file.name
-
-                # OpenJTalkで音声合成
-                # 辞書と音声モデルのパス
-                dic_path = '/var/lib/mecab/dic/open-jtalk/naist-jdic'
-                voice_path = '/usr/share/hts-voice/nitech-jp-atr503-m001/nitech_jp_atr503_m001.htsvoice'
-
-                # 速度パラメータ
-                rate = int(speed * 100)  # speed 1.0 → rate 100
-
-                cmd = [
-                    'open_jtalk',
-                    '-x', dic_path,
-                    '-m', voice_path,
-                    '-r', str(rate / 100.0),  # 話速（0.5〜2.0）
-                    '-ow', wav_path,
-                    text_path
-                ]
-
-                subprocess.run(cmd, check=True, capture_output=True)
-
-                # WAVファイルの先頭に無音を追加（音声途切れ防止）
-                self._prepend_silence_to_wav(wav_path)
-
-                # WAVファイルを再生
-                self._play_audio(wav_path)
+                sound = self.sounds.get(key)
+                if sound:
+                    print(f"🔊 音声: 「{key}」")
+                    sound.play()
+                    # 再生完了まで待機
+                    while pygame.mixer.get_busy():
+                        time.sleep(0.05)
+                else:
+                    print(f"⚠️  音声キーが未登録: {key}")
 
             except Exception as e:
-                print(f"✗ 音声合成エラー: {e}")
+                print(f"✗ 音声再生エラー: {e}")
 
             finally:
-                # 一時ファイルを削除
-                try:
-                    os.unlink(text_path)
-                    os.unlink(wav_path)
-                except:
-                    pass
-
                 self._is_speaking = False
 
-    def _play_audio(self, wav_path):
-        """WAVファイルを再生"""
-        try:
-            if self.bluetooth_device:
-                # Bluetoothデバイスに出力（将来的な実装）
-                # 現在は通常のオーディオ出力
-                pass
-
-            # aplayで再生
-            # HDMI0に出力 (plughw:0,0)
-            # デバイス準備のため短い待機
-            time.sleep(0.1)
-
-            # バッファサイズを指定して途切れを防止
-            subprocess.run([
-                'aplay',
-                '-D', 'plughw:0,0',
-                '--buffer-size=8192',  # バッファサイズを増加
-                '-q',
-                wav_path
-            ], check=True)
-
-        except subprocess.CalledProcessError:
-            print("✗ オーディオ再生に失敗しました")
-
-    def speak_warning(self, remaining_seconds=60):
-        """
-        警告メッセージを読み上げ（ランダムで面白い文言）
-
-        Args:
-            remaining_seconds: 残り時間（秒）
-        """
-        messages = [
-            f"お父さーん、あと{remaining_seconds}秒でテレビ消しますよー。起きてるー？",
-            f"おい、そこの中年。あと{remaining_seconds}秒で電源オフだぞ。",
-            f"父上、そろそろ寝室へお戻りください。{remaining_seconds}秒後に消灯します。",
-            f"パパ！寝落ちしてない？あと{remaining_seconds}秒で消すからね！",
-            f"起きろー！{remaining_seconds}秒以内に反応しないとテレビ消すぞー！",
-            f"おとーさん、いびきかいてるよ。{remaining_seconds}秒後に消すね。",
-            f"これより{remaining_seconds}秒後、テレビを強制終了します。異議は認めません。",
-            f"あと{remaining_seconds}秒。起きてなかったら電気代節約のためテレビ消すよ。",
-        ]
-
-        message = random.choice(messages)
-        self.speak(message, speed=1.1)
+    def speak_warning(self, remaining_seconds=5):
+        """警告メッセージを再生"""
+        self.speak('warning')
 
     def speak_cancel(self):
-        """キャンセルメッセージ"""
-        messages = [
-            "おっ、起きてたんだ。じゃあテレビつけといてあげる。",
-            "了解。引き続きご視聴ください。",
-            "お、動いた。テレビはそのままにしとくね。",
-            "はいはい、起きてますね。キャンセルしました。",
-            "ちゃんと見てたのね。失礼しました。",
-        ]
-
-        message = random.choice(messages)
-        self.speak(message)
+        """キャンセルメッセージを再生"""
+        self.speak('cancel')
 
     def speak_shutdown(self):
-        """電源OFF実行メッセージ"""
-        messages = [
-            "はい、時間です。テレビ消しまーす。おやすみなさい。",
-            "完全に寝てるね。電源オフにします。",
-            "お疲れ様でした。テレビを消灯します。",
-            "寝落ち確定。テレビ切りまーす。",
-            "それでは、お休みなさいませ。",
-        ]
+        """電源OFFメッセージを再生"""
+        self.speak('shutdown')
 
-        message = random.choice(messages)
-        self.speak(message)
-
-
-class BluetoothPairingHelper:
-    """Bluetoothペアリング支援"""
-
-    @staticmethod
-    def scan_devices():
-        """Bluetoothデバイスをスキャン"""
-        print("\n🔍 Bluetoothデバイスをスキャンしています...")
-        try:
-            # bluetoothctlでスキャン
-            result = subprocess.run(
-                ['bluetoothctl', 'devices'],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-
-            devices = []
-            for line in result.stdout.split('\n'):
-                if line.startswith('Device'):
-                    parts = line.split()
-                    if len(parts) >= 3:
-                        mac = parts[1]
-                        name = ' '.join(parts[2:])
-                        devices.append({'mac': mac, 'name': name})
-
-            return devices
-
-        except Exception as e:
-            print(f"✗ スキャンエラー: {e}")
-            return []
-
-    @staticmethod
-    def pair_device(mac_address):
-        """デバイスとペアリング"""
-        print(f"\n🔗 デバイス {mac_address} とペアリングしています...")
-        try:
-            # ペアリング
-            subprocess.run(['bluetoothctl', 'pair', mac_address], timeout=30)
-            # 信頼
-            subprocess.run(['bluetoothctl', 'trust', mac_address], timeout=10)
-            # 接続
-            subprocess.run(['bluetoothctl', 'connect', mac_address], timeout=20)
-
-            print(f"✓ ペアリング成功!")
-            return True
-
-        except Exception as e:
-            print(f"✗ ペアリング失敗: {e}")
-            return False
+    def cleanup(self):
+        """クリーンアップ"""
+        pygame.mixer.quit()
 
 
 if __name__ == '__main__':
     """テスト用"""
-    print("音声合成コントローラーテスト")
+    print("音声コントローラーテスト（事前読み込み版）\n")
     voice = VoiceController()
 
-    print("\n1. 通常の音声テスト")
-    voice.speak("こんにちは。音声合成のテストです。")
+    print("\n1. 起動音テスト")
+    voice.speak_sync('startup')
+    time.sleep(0.3)
 
-    print("\n2. 警告メッセージテスト")
-    voice.speak_warning(60)
+    print("\n2. 警告音テスト")
+    voice.speak_sync('warning')
+    time.sleep(0.3)
 
-    print("\n3. キャンセルメッセージテスト")
-    voice.speak_cancel()
+    print("\n3. キャンセル音テスト")
+    voice.speak_sync('cancel')
+    time.sleep(0.3)
 
-    print("\n4. 電源OFFメッセージテスト")
-    voice.speak_shutdown()
+    print("\n4. シャットダウン音テスト")
+    voice.speak_sync('shutdown')
+    time.sleep(0.3)
 
+    voice.cleanup()
     print("\nテスト完了")
